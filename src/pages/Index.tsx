@@ -6,6 +6,7 @@ import { CategoryBanner } from "@/components/home/CategoryBanner";
 import { PromoSection } from "@/components/home/PromoSection";
 import { GiftSection } from "@/components/home/GiftSection";
 import { InstagramSection } from "@/components/home/InstagramSection";
+import { BlogSection } from "@/components/home/BlogSection";
 import {
   plantsProducts,
   potsProducts,
@@ -108,6 +109,9 @@ const Index = () => {
 
         {/* Gift Garden Section */}
         <GiftSection />
+
+        {/* Blog Section */}
+        <BlogSection />
 
         {/* Instagram Feed */}
         <InstagramSection />
