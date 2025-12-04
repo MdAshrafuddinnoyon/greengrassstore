@@ -52,7 +52,7 @@ export const Header = () => {
 
       <header
         className={cn(
-          "sticky top-0 z-50 transition-all duration-300 bg-white border-b border-gray-200",
+          "sticky top-0 z-50 transition-all duration-300 bg-white border-b border-gray-100",
           isScrolled && "shadow-sm"
         )}
       >
@@ -67,18 +67,36 @@ export const Header = () => {
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Logo */}
+            {/* Left Navigation (Desktop) */}
+            <nav className="hidden lg:flex items-center gap-6">
+              {navLinks.slice(0, 3).map((link) => (
+                <a
+                  key={link.key}
+                  href={link.href}
+                  className="text-[11px] uppercase tracking-[0.15em] font-medium text-gray-700 hover:text-[#2d5a3d] transition-colors"
+                >
+                  {t(link.key)}
+                </a>
+              ))}
+            </nav>
+
+            {/* Logo - Center */}
             <a href="/" className="flex items-center">
               <img src={logo} alt="Green Grass" className="h-10 md:h-12 w-auto" />
             </a>
 
-            {/* Desktop Navigation */}
+            {/* Right Navigation (Desktop) */}
             <nav className="hidden lg:flex items-center gap-6">
-              {navLinks.map((link) => (
+              {navLinks.slice(3).map((link) => (
                 <a
                   key={link.key}
                   href={link.href}
-                  className="text-[11px] uppercase tracking-widest font-medium text-gray-600 hover:text-green-700 transition-colors"
+                  className={cn(
+                    "text-[11px] uppercase tracking-[0.15em] font-medium transition-colors",
+                    link.key === "nav.sale" 
+                      ? "text-red-600 hover:text-red-700" 
+                      : "text-gray-700 hover:text-[#2d5a3d]"
+                  )}
                 >
                   {t(link.key)}
                 </a>
@@ -91,19 +109,19 @@ export const Header = () => {
                 className="p-2 hover:bg-gray-100 rounded transition-colors"
                 aria-label="Search"
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-4 h-4 text-gray-700" />
               </button>
               <button
                 className="hidden sm:flex p-2 hover:bg-gray-100 rounded transition-colors"
                 aria-label="Wishlist"
               >
-                <Heart className="w-4 h-4" />
+                <Heart className="w-4 h-4 text-gray-700" />
               </button>
               <button
                 className="hidden sm:flex p-2 hover:bg-gray-100 rounded transition-colors"
                 aria-label="Account"
               >
-                <User className="w-4 h-4" />
+                <User className="w-4 h-4 text-gray-700" />
               </button>
               <CartDrawer />
             </div>
@@ -150,7 +168,10 @@ export const Header = () => {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="block py-3 px-3 text-sm uppercase tracking-widest font-medium hover:bg-gray-100 rounded transition-colors"
+                      className={cn(
+                        "block py-3 px-3 text-sm uppercase tracking-widest font-medium hover:bg-gray-100 rounded transition-colors",
+                        link.key === "nav.sale" && "text-red-600"
+                      )}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       {t(link.key)}
@@ -160,7 +181,7 @@ export const Header = () => {
                 <div className="mt-8 pt-8 border-t border-gray-200">
                   <button
                     onClick={toggleLanguage}
-                    className="flex items-center gap-2 text-sm font-medium hover:text-green-700 transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium hover:text-[#2d5a3d] transition-colors"
                   >
                     <Globe className="w-4 h-4" />
                     {language === "en" ? "العربية" : "English"}
