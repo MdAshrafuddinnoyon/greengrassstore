@@ -3,7 +3,7 @@ import { toast } from "sonner";
 export const SHOPIFY_API_VERSION = '2025-07';
 export const SHOPIFY_STORE_PERMANENT_DOMAIN = 'yjmkpk-ix.myshopify.com';
 export const SHOPIFY_STOREFRONT_URL = `https://${SHOPIFY_STORE_PERMANENT_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`;
-export const SHOPIFY_STOREFRONT_TOKEN = 'aba6c9770628b13ec3857d0f1f376855';
+export const SHOPIFY_STOREFRONT_TOKEN = 'a9f20992727f7a411b693dde94f9117e';
 
 export interface ShopifyProduct {
   node: {
