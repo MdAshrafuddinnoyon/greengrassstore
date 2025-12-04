@@ -1,27 +1,20 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
-import { ProductSection } from "@/components/products/ProductSection";
 import { ShopifyProductGrid } from "@/components/products/ShopifyProductGrid";
 import { CategoryBanner } from "@/components/home/CategoryBanner";
 import { PromoSection } from "@/components/home/PromoSection";
 import { GiftSection } from "@/components/home/GiftSection";
 import { InstagramSection } from "@/components/home/InstagramSection";
 import { BlogSection } from "@/components/home/BlogSection";
-import {
-  plantsProducts,
-  potsProducts,
-  plantersProducts,
-  vasesProducts,
-  homecareProducts,
-} from "@/data/products";
+import { CategoriesGrid } from "@/components/home/CategoriesGrid";
 
 // Import category banner images
 import hangingPlants from "@/assets/hanging-plants.jpg";
 import womanPlant from "@/assets/woman-plant.jpg";
 import bluePot from "@/assets/blue-pot.jpg";
-import ikebana from "@/assets/ikebana.jpg";
 import plantPot from "@/assets/plant-pot.jpg";
+import ficusPlant from "@/assets/ficus-plant.jpg";
 
 const Index = () => {
   return (
@@ -31,85 +24,67 @@ const Index = () => {
         {/* Hero Section */}
         <HeroSection />
 
-        {/* Shopify Products - Real Products from Store */}
-        <ShopifyProductGrid title="Shop Our Products" limit={8} />
+        {/* Categories Grid */}
+        <CategoriesGrid />
 
-        {/* PLANTS Section */}
-        <ProductSection
+        {/* Shopify Products - Featured Products */}
+        <ShopifyProductGrid title="Featured Products" subtitle="Our Best Sellers" limit={8} />
+
+        {/* PLANTS Banner */}
+        <CategoryBanner
           title="PLANTS"
-          subtitle="Indoor & Outdoor"
-          products={plantsProducts}
-          viewAllLink="/shop?category=plants"
+          subtitle="Indoor & Outdoor Collection"
+          description="Transform your space with our beautiful collection of artificial and real plants"
+          image={ficusPlant}
+          href="/shop?category=plants"
+          layout="left"
+          bgColor="bg-[#f8f8f5]"
         />
 
         {/* POTS Banner */}
         <CategoryBanner
           title="POTS"
-          subtitle="Collection"
-          description="Beautiful containers in terracotta, ceramic, and modern designs"
+          subtitle="Designer Collection"
+          description="Beautiful containers in fiber, ceramic, and terracotta designs"
           image={plantPot}
           href="/shop?category=pots"
-          layout="left"
-          bgColor="bg-[#f8f8f5]"
-        />
-
-        {/* POTS Products */}
-        <ProductSection
-          title="POTS"
-          subtitle="Shop by Style"
-          products={potsProducts}
-          viewAllLink="/shop?category=pots"
-        />
-
-        {/* Greenery Banner */}
-        <CategoryBanner
-          title="GREENERY"
-          subtitle="Green Walls & Bunches"
-          description="Transform your space with lush greenery"
-          image={hangingPlants}
-          href="/shop?category=greenery"
           layout="right"
           bgColor="bg-[#f0f4f0]"
         />
 
-        {/* Flowers Section */}
-        <ProductSection
-          title="FLOWERS"
-          subtitle="Fresh & Artificial"
-          products={homecareProducts}
-          viewAllLink="/shop?category=flowers"
+        {/* Sale Banner */}
+        <PromoSection />
+
+        {/* GREENERY Banner */}
+        <CategoryBanner
+          title="GREENERY"
+          subtitle="Green Walls & Bunches"
+          description="Create stunning vertical gardens and lush green spaces"
+          image={hangingPlants}
+          href="/shop?category=greenery"
+          layout="center"
         />
 
         {/* VASES Banner */}
         <CategoryBanner
           title="VASES"
-          subtitle="Decorative"
-          description="Elegant vases for every style"
+          subtitle="Decorative Collection"
+          description="Elegant vases for every style and occasion"
           image={bluePot}
           href="/shop?category=vases"
-          layout="center"
-        />
-
-        {/* VASES Products */}
-        <ProductSection
-          title="VASES"
-          subtitle="Decorative"
-          products={vasesProducts}
-          viewAllLink="/shop?category=vases"
+          layout="left"
+          bgColor="bg-[#f5f5f0]"
         />
 
         {/* Hanging Plants Banner */}
         <CategoryBanner
-          title="Hanging Plants"
+          title="HANGING PLANTS"
           subtitle="Vertical Gardens"
           description="Beautiful hanging solutions for your space"
           image={womanPlant}
           href="/shop?category=hanging"
           layout="center"
         />
-
-        {/* Sale Banner */}
-        <PromoSection />
 
         {/* Gift Garden Section */}
         <GiftSection />
