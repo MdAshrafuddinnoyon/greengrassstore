@@ -243,6 +243,13 @@ const translations: Record<Language, Record<string, string>> = {
     "account.accountSettings": "Account Settings",
     "account.changePassword": "Change Password",
     "account.notifications": "Notifications",
+    "account.myRequests": "My Requests",
+    "account.noRequests": "You haven't submitted any custom requests yet",
+    "account.submitRequest": "Submit Request",
+    "account.requestPending": "Pending",
+    "account.requestProcessing": "Processing",
+    "account.requestCompleted": "Completed",
+    "account.requestCancelled": "Cancelled",
     
     // Contact
     "contact.title": "Contact Us",
@@ -492,6 +499,13 @@ const translations: Record<Language, Record<string, string>> = {
     "account.accountSettings": "إعدادات الحساب",
     "account.changePassword": "تغيير كلمة المرور",
     "account.notifications": "الإشعارات",
+    "account.myRequests": "طلباتي المخصصة",
+    "account.noRequests": "لم تقدم أي طلبات مخصصة بعد",
+    "account.submitRequest": "تقديم طلب",
+    "account.requestPending": "قيد الانتظار",
+    "account.requestProcessing": "قيد المعالجة",
+    "account.requestCompleted": "مكتمل",
+    "account.requestCancelled": "ملغي",
     
     // Contact
     "contact.title": "اتصل بنا",

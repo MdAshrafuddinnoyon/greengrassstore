@@ -1,12 +1,31 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Instagram, Facebook, Truck, RefreshCw, CreditCard, MapPin, Send } from "lucide-react";
+import { Instagram, Facebook, Truck, RefreshCw, CreditCard, MapPin, Send, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { CustomRequestModal } from "@/components/custom-request/CustomRequestModal";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
+import { useEffect } from "react";
 
 export const Footer = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isArabic = language === "ar";
   const [email, setEmail] = useState("");
+  const [showCustomRequest, setShowCustomRequest] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +35,16 @@ export const Footer = () => {
     }
   };
 
+  const handleCustomRequest = () => {
+    if (!user) {
+      toast.error(isArabic ? "يرجى تسجيل الدخول أولاً" : "Please login first to submit a custom request");
+      return;
+    }
+    setShowCustomRequest(true);
+  };
+
   return (
+    <>
     <footer className="bg-[#3d3d35] text-white">
       {/* Newsletter Section */}
       <div className="border-b border-white/10">
@@ -190,5 +218,24 @@ export const Footer = () => {
         </div>
       </div>
     </footer>
+
+      {/* Custom Request Button - Fixed */}
+      <button
+        onClick={handleCustomRequest}
+        className="fixed bottom-24 md:bottom-6 left-4 md:left-6 z-40 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+      >
+        <FileText className="w-5 h-5" />
+        <span className="hidden sm:inline text-sm font-medium">
+          {isArabic ? "طلب مخصص" : "Custom Request"}
+        </span>
+      </button>
+
+      {/* Custom Request Modal */}
+      <CustomRequestModal
+        isOpen={showCustomRequest}
+        onClose={() => setShowCustomRequest(false)}
+        user={user ? { id: user.id, email: user.email || "" } : null}
+      />
+    </>
   );
 };

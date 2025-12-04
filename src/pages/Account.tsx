@@ -1,14 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, MapPin, Phone, Mail, Package, Heart, LogOut, Edit2, Save, Loader2, ChevronRight, Settings, Trash2, ShoppingBag } from "lucide-react";
+import { User, MapPin, Phone, Mail, Package, Heart, LogOut, Edit2, Save, Loader2, ChevronRight, Settings, Trash2, ShoppingBag, FileText, Clock, CheckCircle, AlertCircle, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlistStore, WishlistItem } from "@/stores/wishlistStore";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CustomRequestModal } from "@/components/custom-request/CustomRequestModal";
 import { toast } from "sonner";
 import type { User as SupabaseUser, Session } from "@supabase/supabase-js";
+
+interface CustomRequest {
+  id: string;
+  title: string;
+  description: string;
+  requirement_type: string;
+  status: string;
+  created_at: string;
+  budget: string | null;
+  timeline: string | null;
+}
 
 interface Profile {
   id: string;
@@ -29,8 +41,12 @@ const Account = () => {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const [customRequests, setCustomRequests] = useState<CustomRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isArabic = language === "ar";
   const { items: wishlistItems, fetchWishlist, removeFromWishlist, loading: wishlistLoading } = useWishlistStore();
 
   // Form states
@@ -131,8 +147,67 @@ const Account = () => {
   const handleRemoveFromWishlist = async (productId: string) => {
     const success = await removeFromWishlist(productId);
     if (success) {
-      toast.success("Removed from wishlist");
+      toast.success(isArabic ? "تمت الإزالة من المفضلة" : "Removed from wishlist");
     }
+  };
+
+  const fetchCustomRequests = async () => {
+    if (!user) return;
+    setRequestsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("custom_requirements")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setCustomRequests(data || []);
+    } catch (error: any) {
+      console.error("Error fetching requests:", error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "requests" && user) {
+      fetchCustomRequests();
+    }
+  }, [activeTab, user]);
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "processing":
+        return <Clock className="w-4 h-4 text-amber-500" />;
+      case "cancelled":
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "completed": return t("account.requestCompleted");
+      case "processing": return t("account.requestProcessing");
+      case "cancelled": return t("account.requestCancelled");
+      default: return t("account.requestPending");
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    const types: Record<string, { en: string; ar: string }> = {
+      custom_plant: { en: "Custom Plant", ar: "نباتات مخصصة" },
+      bulk_order: { en: "Bulk Order", ar: "طلب بالجملة" },
+      corporate_gift: { en: "Corporate Gift", ar: "هدايا الشركات" },
+      event_decoration: { en: "Event Decoration", ar: "تزيين المناسبات" },
+      landscaping: { en: "Landscaping", ar: "تنسيق الحدائق" },
+      other: { en: "Other", ar: "أخرى" },
+    };
+    return types[type]?.[isArabic ? "ar" : "en"] || type;
   };
 
   if (loading) {
@@ -147,6 +222,7 @@ const Account = () => {
     { id: "profile", label: t("account.profile"), icon: User },
     { id: "orders", label: t("account.orders"), icon: Package },
     { id: "wishlist", label: t("account.wishlist"), icon: Heart, count: wishlistItems.length },
+    { id: "requests", label: t("account.myRequests"), icon: FileText, count: customRequests.length },
     { id: "settings", label: t("account.settings"), icon: Settings },
   ];
 
@@ -484,11 +560,99 @@ const Account = () => {
                   </div>
                 </motion.div>
               )}
+
+              {activeTab === "requests" && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-card rounded-2xl border border-border p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      {t("account.myRequests")}
+                    </h2>
+                    <button
+                      onClick={() => setShowRequestModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {isArabic ? "طلب جديد" : "New Request"}
+                    </button>
+                  </div>
+                  
+                  {requestsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                  ) : customRequests.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-4">{t("account.noRequests")}</p>
+                      <button
+                        onClick={() => setShowRequestModal(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        {t("account.submitRequest")}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {customRequests.map((request) => (
+                        <motion.div
+                          key={request.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-4 bg-muted rounded-xl"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                                  {getTypeLabel(request.requirement_type)}
+                                </span>
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  {getStatusIcon(request.status)}
+                                  {getStatusLabel(request.status)}
+                                </span>
+                              </div>
+                              <h4 className="font-medium text-foreground mb-1">{request.title}</h4>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{request.description}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                <span>
+                                  {new Date(request.created_at).toLocaleDateString(isArabic ? "ar-AE" : "en-AE", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric"
+                                  })}
+                                </span>
+                                {request.budget && (
+                                  <span>{isArabic ? "الميزانية:" : "Budget:"} {request.budget}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </div>
           </div>
         </div>
       </main>
       <Footer />
+      
+      {/* Custom Request Modal */}
+      <CustomRequestModal
+        isOpen={showRequestModal}
+        onClose={() => {
+          setShowRequestModal(false);
+          fetchCustomRequests();
+        }}
+        user={user ? { id: user.id, email: user.email || "" } : null}
+      />
     </div>
   );
 };
