@@ -119,46 +119,46 @@ export const SalesAgent = () => {
       {/* Chat Button - Bottom right corner */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#2d5a3d] flex items-center justify-center shadow-lg shadow-[#2d5a3d]/30 text-white hover:scale-110 transition-transform"
+        className="fixed bottom-4 sm:bottom-6 right-3 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#2d5a3d] flex items-center justify-center shadow-lg shadow-[#2d5a3d]/30 text-white hover:scale-110 transition-transform"
         whileTap={{ scale: 0.95 }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: isOpen ? 0 : 1, opacity: isOpen ? 0 : 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.8 }}
         title="Chat with Sales Assistant"
       >
-        <MessageSquare className="w-6 h-6" />
+        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
       </motion.button>
 
-      {/* Chat Window */}
+      {/* Chat Window - Mobile Responsive */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] h-[550px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+            className="fixed bottom-0 right-0 left-0 sm:bottom-6 sm:right-6 sm:left-auto z-50 w-full sm:w-[380px] h-[100dvh] sm:h-[550px] sm:max-h-[80vh] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden border-0 sm:border sm:border-gray-200"
           >
             {/* Header */}
-            <div className="bg-[#2d5a3d] px-4 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                  <Bot className="w-6 h-6 text-white" />
+            <div className="bg-[#2d5a3d] px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center">
+                  <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">Sales Assistant</h3>
+                  <h3 className="font-semibold text-white text-sm sm:text-base">Sales Assistant</h3>
                   <p className="text-xs text-white/80">Online • Ready to help</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+                className="w-9 h-9 sm:w-8 sm:h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
               >
                 <X className="w-5 h-5 text-white" />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-gray-50">
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
@@ -167,25 +167,25 @@ export const SalesAgent = () => {
                   className={`flex gap-2 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {message.sender === "agent" && (
-                    <div className="w-8 h-8 rounded-full bg-[#2d5a3d] flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-4 h-4 text-white" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#2d5a3d] flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </div>
                   )}
                   <div
-                    className={`max-w-[75%] px-4 py-3 rounded-2xl ${
+                    className={`max-w-[80%] sm:max-w-[75%] px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl ${
                       message.sender === "user"
                         ? "bg-[#2d5a3d] text-white rounded-br-md"
                         : "bg-white text-gray-800 rounded-bl-md shadow-sm"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-line">{message.text}</p>
-                    <p className={`text-xs mt-1 ${message.sender === "user" ? "text-white/70" : "text-gray-400"}`}>
+                    <p className="text-xs sm:text-sm whitespace-pre-line">{message.text}</p>
+                    <p className={`text-[10px] sm:text-xs mt-1 ${message.sender === "user" ? "text-white/70" : "text-gray-400"}`}>
                       {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
                   {message.sender === "user" && (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-gray-600" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600" />
                     </div>
                   )}
                 </motion.div>
@@ -197,14 +197,14 @@ export const SalesAgent = () => {
                   animate={{ opacity: 1 }}
                   className="flex gap-2 items-center"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#2d5a3d] flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#2d5a3d] flex items-center justify-center">
+                    <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                   </div>
-                  <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+                  <div className="bg-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl rounded-bl-md shadow-sm">
                     <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   </div>
                 </motion.div>
@@ -214,12 +214,12 @@ export const SalesAgent = () => {
 
             {/* Quick Replies */}
             {messages.length <= 2 && (
-              <div className="px-4 py-2 bg-white border-t flex gap-2 overflow-x-auto">
+              <div className="px-3 sm:px-4 py-2 bg-white border-t flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide">
                 {quickReplies.map((reply) => (
                   <button
                     key={reply}
                     onClick={() => handleQuickReply(reply)}
-                    className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-full whitespace-nowrap transition-colors text-gray-700"
+                    className="px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs bg-gray-100 hover:bg-gray-200 rounded-full whitespace-nowrap transition-colors text-gray-700"
                   >
                     {reply}
                   </button>
@@ -228,7 +228,7 @@ export const SalesAgent = () => {
             )}
 
             {/* Input */}
-            <div className="p-4 bg-white border-t">
+            <div className="p-3 sm:p-4 bg-white border-t safe-area-bottom">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -240,13 +240,13 @@ export const SalesAgent = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 rounded-full border-gray-200"
+                  className="flex-1 rounded-full border-gray-200 text-sm h-10 sm:h-auto"
                 />
                 <Button
                   type="submit"
                   size="icon"
                   disabled={!inputValue.trim() || isTyping}
-                  className="rounded-full bg-[#2d5a3d] hover:bg-[#234830] w-10 h-10"
+                  className="rounded-full bg-[#2d5a3d] hover:bg-[#234830] w-10 h-10 flex-shrink-0"
                 >
                   {isTyping ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -256,7 +256,7 @@ export const SalesAgent = () => {
                 </Button>
               </form>
               {/* Powered by */}
-              <p className="text-center text-xs text-gray-400 mt-3">
+              <p className="text-center text-[10px] sm:text-xs text-gray-400 mt-2 sm:mt-3">
                 Powered by{" "}
                 <a
                   href="https://www.websearchbd.com"
