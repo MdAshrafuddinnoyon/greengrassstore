@@ -170,6 +170,7 @@ export const Footer = () => {
             <h4 className="font-bold text-sm mb-4">{t("footer.help")}</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
               <li><Link to="/contact" className="hover:text-white transition-colors">{t("footer.contactUs")}</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">{isArabic ? "الأسئلة الشائعة" : "FAQ"}</Link></li>
               <li><Link to="/blog" className="hover:text-white transition-colors">{t("blog.title")}</Link></li>
               <li><Link to="/returns" className="hover:text-white transition-colors">{t("footer.returnPolicy")}</Link></li>
               <li><Link to="/privacy" className="hover:text-white transition-colors">{t("footer.privacy")}</Link></li>
