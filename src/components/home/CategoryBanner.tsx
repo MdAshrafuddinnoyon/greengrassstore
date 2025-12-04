@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface CategoryBannerProps {
   title: string;
@@ -47,13 +48,13 @@ export const CategoryBanner = ({
             {description && (
               <p className="text-white/80 mb-6 max-w-md mx-auto text-sm">{description}</p>
             )}
-            <a
-              href={href}
+            <Link
+              to={href}
               className="inline-flex items-center gap-2 bg-white text-black px-6 py-2.5 text-xs uppercase tracking-widest font-medium hover:bg-white/90 transition-colors"
             >
               Shop Now
               <ArrowRight className="w-3 h-3" />
-            </a>
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -102,13 +103,13 @@ export const CategoryBanner = ({
             {description && (
               <p className="text-gray-600 mb-5 max-w-md text-sm">{description}</p>
             )}
-            <a
-              href={href}
+            <Link
+              to={href}
               className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-gray-900 hover:gap-3 transition-all"
             >
               Shop Now
               <ArrowRight className="w-3 h-3" />
-            </a>
+            </Link>
           </motion.div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ProductCard, Product } from "./ProductCard";
 
 interface ProductSectionProps {
@@ -38,13 +39,13 @@ export const ProductSection = ({
               )}
             </div>
             {viewAllLink && (
-              <a
-                href={viewAllLink}
-                className="hidden md:flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-gray-900 hover:text-green-700 transition-colors"
+              <Link
+                to={viewAllLink}
+                className="hidden md:flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-gray-900 hover:text-[#2d5a3d] transition-colors"
               >
                 View All
                 <ArrowRight className="w-3 h-3" />
-              </a>
+              </Link>
             )}
           </div>
         </motion.div>
@@ -71,13 +72,13 @@ export const ProductSection = ({
         {/* Mobile View All */}
         {viewAllLink && (
           <div className="mt-6 text-center md:hidden">
-            <a
-              href={viewAllLink}
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-gray-900"
+            <Link
+              to={viewAllLink}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-gray-900 hover:text-[#2d5a3d] transition-colors"
             >
               View All
               <ArrowRight className="w-3 h-3" />
-            </a>
+            </Link>
           </div>
         )}
       </div>
