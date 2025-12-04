@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ShopifyProductCard } from "@/components/products/ShopifyProductCard";
 import { ProductFilters } from "@/components/products/ProductFilters";
-import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
+import { fetchProducts, ShopifyProduct, filterProductsByCategory, isProductOnSale } from "@/lib/shopify";
 import { Search, SlidersHorizontal, Grid3X3, LayoutGrid, ChevronDown, X, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 const categories = [
   { key: "all", label: "All Products" },
   // Plants Category
-  { key: "plants", label: "Plants", isParent: true },
+  { key: "plants", label: "🌿 Plants", isParent: true },
   { key: "mixed-plant", label: "Mixed Plant" },
   { key: "palm-tree", label: "Palm Tree" },
   { key: "ficus-tree", label: "Ficus Tree" },
@@ -20,21 +20,29 @@ const categories = [
   { key: "paradise-plant", label: "Paradise Plant" },
   { key: "bamboo-tree", label: "Bamboo Tree" },
   // Flowers Category
-  { key: "flowers", label: "Flowers", isParent: true },
-  { key: "flower", label: "Flower" },
+  { key: "flowers", label: "🌸 Flowers", isParent: true },
+  { key: "fresh-flowers", label: "Fresh Flowers" },
+  { key: "artificial-flowers", label: "Artificial Flowers" },
+  { key: "flower-bouquets", label: "Flower Bouquets" },
   // Pots Category
-  { key: "pots", label: "Pots", isParent: true },
+  { key: "pots", label: "🪴 Pots", isParent: true },
   { key: "fiber-pot", label: "Fiber Pot" },
   { key: "plastic-pot", label: "Plastic Pot" },
   { key: "ceramic-pot", label: "Ceramic Pot" },
+  { key: "terracotta-pot", label: "Terracotta Pot" },
   // Greenery Category
-  { key: "greenery", label: "Greenery", isParent: true },
+  { key: "greenery", label: "🌱 Greenery", isParent: true },
   { key: "green-wall", label: "Green Wall" },
   { key: "greenery-bunch", label: "Greenery Bunch" },
   { key: "moss", label: "Moss" },
+  { key: "grass", label: "Grass" },
+  // Vases
+  { key: "vases", label: "🏺 Vases", isParent: true },
   // Other
-  { key: "hanging", label: "Hanging" },
-  { key: "sale", label: "Sale" },
+  { key: "hanging", label: "🌿 Hanging" },
+  { key: "gifts", label: "🎁 Gifts" },
+  { key: "new-arrivals", label: "✨ New Arrivals" },
+  { key: "sale", label: "🏷️ Sale", isSale: true },
 ];
 
 const sortOptions = [
@@ -107,16 +115,9 @@ export default function Shop() {
       setLoading(true);
       try {
         const query = searchParams.get("q") || undefined;
-        const category = searchParams.get("category");
         
-        let searchFilter = query;
-        if (category && category !== "all") {
-          searchFilter = searchFilter 
-            ? `${searchFilter} product_type:${category}` 
-            : `product_type:${category}`;
-        }
-        
-        const data = await fetchProducts(50, searchFilter);
+        // Fetch all products, we'll filter client-side for better UX
+        const data = await fetchProducts(100, query);
         setProducts(data);
       } catch (error) {
         console.error("Error loading products:", error);
@@ -126,6 +127,12 @@ export default function Shop() {
     };
 
     loadProducts();
+  }, [searchParams]);
+
+  // Sync selected category with URL params
+  useEffect(() => {
+    const categoryParam = searchParams.get("category") || "all";
+    setSelectedCategory(categoryParam);
   }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -165,6 +172,16 @@ export default function Shop() {
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
+
+    // Category filter (client-side)
+    if (selectedCategory && selectedCategory !== "all") {
+      // Special handling for sale category
+      if (selectedCategory === "sale") {
+        result = result.filter(p => isProductOnSale(p));
+      } else {
+        result = filterProductsByCategory(result, selectedCategory);
+      }
+    }
 
     // Price filter
     result = result.filter((p) => {
@@ -213,7 +230,7 @@ export default function Shop() {
     }
 
     return result;
-  }, [products, priceRange, sortBy, selectedColors, selectedSizes]);
+  }, [products, selectedCategory, priceRange, sortBy, selectedColors, selectedSizes]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);

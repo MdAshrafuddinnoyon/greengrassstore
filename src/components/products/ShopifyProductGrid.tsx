@@ -5,11 +5,12 @@ import { Loader2 } from "lucide-react";
 
 interface ShopifyProductGridProps {
   title?: string;
+  subtitle?: string;
   query?: string;
   limit?: number;
 }
 
-export const ShopifyProductGrid = ({ title, query, limit = 12 }: ShopifyProductGridProps) => {
+export const ShopifyProductGrid = ({ title, subtitle, query, limit = 12 }: ShopifyProductGridProps) => {
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +82,10 @@ export const ShopifyProductGrid = ({ title, query, limit = 12 }: ShopifyProductG
     <section className="py-12">
       <div className="container mx-auto px-4">
         {title && (
-          <h2 className="text-xl font-medium text-gray-900 mb-8">{title}</h2>
+          <div className="mb-8">
+            <h2 className="text-xl font-medium text-gray-900">{title}</h2>
+            {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+          </div>
         )}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((product) => (
