@@ -116,15 +116,15 @@ export const SalesAgent = () => {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Chat Button - Bottom right corner */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#2d5a3d] flex items-center justify-center shadow-lg shadow-[#2d5a3d]/30 text-white"
-        whileHover={{ scale: 1.1 }}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#2d5a3d] flex items-center justify-center shadow-lg shadow-[#2d5a3d]/30 text-white hover:scale-110 transition-transform"
         whileTap={{ scale: 0.95 }}
-        initial={{ scale: 0 }}
-        animate={{ scale: isOpen ? 0 : 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: isOpen ? 0 : 1, opacity: isOpen ? 0 : 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.8 }}
+        title="Chat with Sales Assistant"
       >
         <MessageSquare className="w-6 h-6" />
       </motion.button>
