@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 
-const WHATSAPP_NUMBER = "971501234567"; // Replace with actual WhatsApp number
+const WHATSAPP_NUMBER = "971547751901"; // Green Grass Store WhatsApp
 
 interface WhatsAppButtonProps {
   message?: string;
