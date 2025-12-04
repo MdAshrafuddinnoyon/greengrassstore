@@ -27,15 +27,15 @@ export const HeroSection = () => {
             transition={{ duration: 0.6 }}
           >
             <span className="inline-block px-3 py-1 bg-[#2d5a3d] text-white text-xs font-medium rounded-full mb-4">
-              New Collection 2025
+              {t("hero.newCollection")}
             </span>
             <h1 className="text-4xl font-bold text-white mb-3 leading-tight">
-              Beautiful Plants
+              {t("hero.beautifulPlants")}
               <br />
-              <span className="text-[#c9a87c]">For Your Home</span>
+              <span className="text-[#c9a87c]">{t("hero.forYourHome")}</span>
             </h1>
             <p className="text-white/70 text-sm mb-6 max-w-xs">
-              Transform your space with our premium artificial and real plants collection
+              {t("hero.mobileDesc")}
             </p>
             
             <div className="flex gap-3">
@@ -43,14 +43,14 @@ export const HeroSection = () => {
                 to="/shop?category=plants"
                 className="flex-1 bg-white text-gray-900 px-6 py-3.5 text-sm font-semibold text-center rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
               >
-                Shop Now
+                {t("cta.shopNow")}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/shop"
                 className="px-6 py-3.5 text-sm font-medium text-white border border-white/30 rounded-xl hover:bg-white/10 transition-colors"
               >
-                Explore
+                {t("cta.explore")}
               </Link>
             </div>
           </motion.div>
@@ -64,15 +64,15 @@ export const HeroSection = () => {
           >
             <div className="flex items-center gap-2 text-white/70">
               <Truck className="w-4 h-4" />
-              <span className="text-xs">Free Delivery</span>
+              <span className="text-xs">{t("common.freeDelivery")}</span>
             </div>
             <div className="flex items-center gap-2 text-white/70">
               <Shield className="w-4 h-4" />
-              <span className="text-xs">Quality Assured</span>
+              <span className="text-xs">{t("common.qualityAssured")}</span>
             </div>
             <div className="flex items-center gap-2 text-white/70">
               <Leaf className="w-4 h-4" />
-              <span className="text-xs">Fresh Plants</span>
+              <span className="text-xs">{t("common.freshPlants")}</span>
             </div>
           </motion.div>
         </div>
@@ -103,15 +103,15 @@ export const HeroSection = () => {
                 transition={{ delay: 0.2 }}
                 className="inline-block px-4 py-2 bg-[#2d5a3d] text-white text-xs font-medium rounded-full mb-6"
               >
-                ✨ New Collection 2025
+                ✨ {t("hero.newCollection")}
               </motion.span>
               
               <p className="text-base lg:text-lg text-[#c9a87c] italic mb-4">
-                Plants That Look Real & Thrive Without Maintenance in UAE Homes
+                {t("hero.tagline")}
               </p>
               
               <h1 className="text-5xl lg:text-7xl font-bold text-white mb-8 tracking-tight">
-                PLANTS
+                {t("section.plants").toUpperCase()}
               </h1>
               
               <div className="flex gap-4">
@@ -119,14 +119,14 @@ export const HeroSection = () => {
                   to="/shop?category=plants"
                   className="inline-flex items-center gap-2 bg-white text-gray-900 px-8 py-4 text-sm font-semibold hover:bg-gray-100 transition-colors rounded-lg"
                 >
-                  Shop Plants
+                  {t("hero.shopPlants")}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   to="/shop"
                   className="inline-flex items-center gap-2 bg-transparent text-white px-8 py-4 text-sm font-medium border border-white/30 hover:bg-white/10 transition-colors rounded-lg"
                 >
-                  View All
+                  {t("cta.viewAll")}
                 </Link>
               </div>
 
@@ -142,8 +142,8 @@ export const HeroSection = () => {
                     <Truck className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-white text-sm font-medium">Free Delivery</p>
-                    <p className="text-white/50 text-xs">On orders over AED 200</p>
+                    <p className="text-white text-sm font-medium">{t("common.freeDelivery")}</p>
+                    <p className="text-white/50 text-xs">{t("hero.onOrdersOver")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -151,8 +151,8 @@ export const HeroSection = () => {
                     <Shield className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-white text-sm font-medium">Quality Assured</p>
-                    <p className="text-white/50 text-xs">Premium products only</p>
+                    <p className="text-white text-sm font-medium">{t("common.qualityAssured")}</p>
+                    <p className="text-white/50 text-xs">{t("hero.premiumOnly")}</p>
                   </div>
                 </div>
               </motion.div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Instagram, Facebook, Twitter, Truck, RefreshCw, CreditCard, MapPin, Send } from "lucide-react";
+import { Instagram, Facebook, Truck, RefreshCw, CreditCard, MapPin, Send } from "lucide-react";
 import { toast } from "sonner";
 
 export const Footer = () => {
@@ -11,7 +11,7 @@ export const Footer = () => {
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      toast.success("Successfully subscribed to newsletter!");
+      toast.success(t("footer.subscribed"));
       setEmail("");
     }
   };
@@ -23,16 +23,16 @@ export const Footer = () => {
         <div className="container mx-auto px-4 py-10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <h3 className="text-lg font-bold tracking-wide mb-2">BE THE FIRST TO KNOW</h3>
+              <h3 className="text-lg font-bold tracking-wide mb-2">{t("footer.beFirst")}</h3>
               <p className="text-gray-400 text-sm max-w-md">
-                Subscribe to our newsletter for exclusive content, and special offers delivered straight to your inbox.
+                {t("footer.newsletterDesc")}
               </p>
             </div>
             <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
               <div className="relative">
                 <input
                   type="email"
-                  placeholder="Your email address"
+                  placeholder={t("footer.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full sm:w-72 px-4 py-3 bg-transparent border border-gray-600 rounded-none text-white placeholder:text-gray-500 focus:outline-none focus:border-white transition-colors"
@@ -44,7 +44,7 @@ export const Footer = () => {
                 type="submit"
                 className="px-6 py-3 bg-white text-[#3d3d35] font-semibold text-sm hover:bg-gray-100 transition-colors"
               >
-                SUBMIT
+                {t("footer.submit")}
               </button>
             </form>
           </div>
@@ -58,29 +58,29 @@ export const Footer = () => {
             <div className="flex items-start gap-3">
               <Truck className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-sm">Free Delivery</h4>
-                <p className="text-gray-400 text-xs mt-0.5">Free Delivery On Orders Over 300 AED</p>
+                <h4 className="font-semibold text-sm">{t("footer.freeDelivery")}</h4>
+                <p className="text-gray-400 text-xs mt-0.5">{t("footer.freeDeliveryDesc")}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <RefreshCw className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-sm">Hassle-Free Returns</h4>
-                <p className="text-gray-400 text-xs mt-0.5">Within 7 days of delivery.</p>
+                <h4 className="font-semibold text-sm">{t("footer.hassleFree")}</h4>
+                <p className="text-gray-400 text-xs mt-0.5">{t("footer.hassleFreeDesc")}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <CreditCard className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-sm">Easy Installments</h4>
-                <p className="text-gray-400 text-xs mt-0.5">Pay Later with tabby.</p>
+                <h4 className="font-semibold text-sm">{t("footer.easyInstallments")}</h4>
+                <p className="text-gray-400 text-xs mt-0.5">{t("footer.easyInstallmentsDesc")}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-pink-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-semibold text-sm">Visit Us In-Store</h4>
-                <p className="text-gray-400 text-xs mt-0.5">In Abu Dhabi and Dubai.</p>
+                <h4 className="font-semibold text-sm">{t("footer.visitStore")}</h4>
+                <p className="text-gray-400 text-xs mt-0.5">{t("footer.visitStoreDesc")}</p>
               </div>
             </div>
           </div>
@@ -97,7 +97,7 @@ export const Footer = () => {
               <h2 className="text-3xl font-serif font-bold tracking-tight">GRASS</h2>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
-              We craft timeless pieces that blend elegance and functionality, elevating every space into a masterpiece. Our commitment to quality and design ensures that your home reflects sophistication and comfort in every detail.
+              We craft timeless pieces that blend elegance and functionality, elevating every space into a masterpiece.
             </p>
             {/* Social Links */}
             <div className="flex items-center gap-4 mt-6">
@@ -117,44 +117,44 @@ export const Footer = () => {
 
           {/* Plants & Flowers */}
           <div>
-            <h4 className="font-bold text-sm mb-4">Plants & Flowers</h4>
+            <h4 className="font-bold text-sm mb-4">{t("footer.plantsFlowers")}</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
-              <li><Link to="/shop?category=plants" className="hover:text-white transition-colors">Plants</Link></li>
-              <li><Link to="/shop?category=flowers" className="hover:text-white transition-colors">Flowers</Link></li>
-              <li><Link to="/shop?category=greenery" className="hover:text-white transition-colors">Greenery</Link></li>
-              <li><Link to="/shop?category=hanging" className="hover:text-white transition-colors">Hanging</Link></li>
+              <li><Link to="/shop?category=plants" className="hover:text-white transition-colors">{t("nav.plants")}</Link></li>
+              <li><Link to="/shop?category=flowers" className="hover:text-white transition-colors">{t("nav.flowers")}</Link></li>
+              <li><Link to="/shop?category=greenery" className="hover:text-white transition-colors">{t("nav.greenery")}</Link></li>
+              <li><Link to="/shop?category=hanging" className="hover:text-white transition-colors">{t("nav.hanging")}</Link></li>
             </ul>
           </div>
 
           {/* Pots */}
           <div>
-            <h4 className="font-bold text-sm mb-4">Pots</h4>
+            <h4 className="font-bold text-sm mb-4">{t("footer.pots")}</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
-              <li><Link to="/shop?category=fiber-pot" className="hover:text-white transition-colors">Fiber Pot</Link></li>
-              <li><Link to="/shop?category=plastic-pot" className="hover:text-white transition-colors">Plastic Pot</Link></li>
-              <li><Link to="/shop?category=ceramic-pot" className="hover:text-white transition-colors">Ceramic Pot</Link></li>
+              <li><Link to="/shop?category=fiber-pot" className="hover:text-white transition-colors">{t("sub.fiberPot")}</Link></li>
+              <li><Link to="/shop?category=plastic-pot" className="hover:text-white transition-colors">{t("sub.plasticPot")}</Link></li>
+              <li><Link to="/shop?category=ceramic-pot" className="hover:text-white transition-colors">{t("sub.ceramicPot")}</Link></li>
             </ul>
           </div>
 
           {/* Help */}
           <div>
-            <h4 className="font-bold text-sm mb-4">Help</h4>
+            <h4 className="font-bold text-sm mb-4">{t("footer.help")}</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact us</Link></li>
-              <li><Link to="/blog" className="hover:text-white transition-colors">Blog</Link></li>
-              <li><Link to="/returns" className="hover:text-white transition-colors">Return Policy</Link></li>
-              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">{t("footer.contactUs")}</Link></li>
+              <li><Link to="/blog" className="hover:text-white transition-colors">{t("blog.title")}</Link></li>
+              <li><Link to="/returns" className="hover:text-white transition-colors">{t("footer.returnPolicy")}</Link></li>
+              <li><Link to="/privacy" className="hover:text-white transition-colors">{t("footer.privacy")}</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition-colors">{t("footer.terms")}</Link></li>
             </ul>
           </div>
 
           {/* About */}
           <div>
-            <h4 className="font-bold text-sm mb-4">About</h4>
+            <h4 className="font-bold text-sm mb-4">{t("footer.aboutLink")}</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
-              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link to="/shop" className="hover:text-white transition-colors">Shop</Link></li>
-              <li><Link to="/vip" className="hover:text-white transition-colors">VIP Program</Link></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">{t("footer.about")}</Link></li>
+              <li><Link to="/shop" className="hover:text-white transition-colors">{t("footer.shop")}</Link></li>
+              <li><Link to="/vip" className="hover:text-white transition-colors">{t("footer.vipProgram")}</Link></li>
             </ul>
           </div>
         </div>
@@ -165,18 +165,18 @@ export const Footer = () => {
         <div className="container mx-auto px-4 py-5">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-500">
-              © 2025 Green Grass Store. All rights reserved.
+              {t("footer.copyright")}
             </p>
             <div className="flex items-center gap-6 text-xs text-gray-500">
-              <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-white transition-colors">{t("footer.privacy")}</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">{t("footer.terms")}</Link>
               <span>www.greengrassstore.com</span>
             </div>
           </div>
           {/* Developer Credit */}
           <div className="mt-4 pt-4 border-t border-white/10 text-center">
             <p className="text-xs text-gray-500">
-              Developed by{" "}
+              {t("footer.developedBy")}{" "}
               <a
                 href="https://www.websearchbd.com"
                 target="_blank"

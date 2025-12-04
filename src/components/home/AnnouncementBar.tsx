@@ -1,15 +1,17 @@
 import { X } from "lucide-react";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const AnnouncementBar = () => {
   const [isVisible, setIsVisible] = useState(true);
+  const { t } = useLanguage();
 
   if (!isVisible) return null;
 
   return (
     <div className="bg-primary text-primary-foreground text-xs py-2 relative">
       <div className="container mx-auto px-4 text-center">
-        <span>🌿 Free delivery on orders over AED 200 | Same day delivery in Dubai</span>
+        <span>{t("announcement.freeDelivery")}</span>
       </div>
       <button
         onClick={() => setIsVisible(false)}

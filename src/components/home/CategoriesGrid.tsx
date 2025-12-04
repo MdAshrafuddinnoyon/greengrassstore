@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Leaf, Flower2, Package, Shrub, Sparkles, Gift, Tag } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Import images
 import ficusPlant from "@/assets/ficus-plant.jpg";
@@ -11,67 +12,69 @@ import plantPot from "@/assets/plant-pot.jpg";
 import ikebana from "@/assets/ikebana.jpg";
 import gardenFlowers from "@/assets/garden-flowers.jpg";
 
-const categories = [
-  {
-    name: "Plants",
-    icon: Leaf,
-    image: ficusPlant,
-    href: "/shop?category=plants",
-    description: "Indoor & Outdoor",
-    color: "from-green-600 to-green-800",
-  },
-  {
-    name: "Flowers",
-    icon: Flower2,
-    image: flowerPot,
-    href: "/shop?category=flowers",
-    description: "Fresh & Artificial",
-    color: "from-pink-500 to-rose-600",
-  },
-  {
-    name: "Pots",
-    icon: Package,
-    image: plantPot,
-    href: "/shop?category=pots",
-    description: "All Styles",
-    color: "from-amber-600 to-orange-700",
-  },
-  {
-    name: "Greenery",
-    icon: Shrub,
-    image: hangingPlants,
-    href: "/shop?category=greenery",
-    description: "Walls & Bunches",
-    color: "from-emerald-600 to-teal-700",
-  },
-  {
-    name: "Vases",
-    icon: Sparkles,
-    image: bluePot,
-    href: "/shop?category=vases",
-    description: "Decorative",
-    color: "from-blue-600 to-indigo-700",
-  },
-  {
-    name: "Gifts",
-    icon: Gift,
-    image: ikebana,
-    href: "/shop?category=gifts",
-    description: "Gift Sets",
-    color: "from-purple-600 to-violet-700",
-  },
-  {
-    name: "Sale",
-    icon: Tag,
-    image: gardenFlowers,
-    href: "/shop?category=sale",
-    description: "Up to 40% Off",
-    color: "from-red-500 to-rose-600",
-    isSale: true,
-  },
-];
-
 export const CategoriesGrid = () => {
+  const { t } = useLanguage();
+
+  const categories = [
+    {
+      name: t("nav.plants"),
+      icon: Leaf,
+      image: ficusPlant,
+      href: "/shop?category=plants",
+      description: t("category.indoorOutdoor"),
+      color: "from-green-600 to-green-800",
+    },
+    {
+      name: t("nav.flowers"),
+      icon: Flower2,
+      image: flowerPot,
+      href: "/shop?category=flowers",
+      description: t("category.freshArtificial"),
+      color: "from-pink-500 to-rose-600",
+    },
+    {
+      name: t("nav.pots"),
+      icon: Package,
+      image: plantPot,
+      href: "/shop?category=pots",
+      description: t("category.allStyles"),
+      color: "from-amber-600 to-orange-700",
+    },
+    {
+      name: t("nav.greenery"),
+      icon: Shrub,
+      image: hangingPlants,
+      href: "/shop?category=greenery",
+      description: t("category.wallsBunches"),
+      color: "from-emerald-600 to-teal-700",
+    },
+    {
+      name: t("nav.vases"),
+      icon: Sparkles,
+      image: bluePot,
+      href: "/shop?category=vases",
+      description: t("category.decorative"),
+      color: "from-blue-600 to-indigo-700",
+    },
+    {
+      name: t("nav.gifts"),
+      icon: Gift,
+      image: ikebana,
+      href: "/shop?category=gifts",
+      description: t("category.giftSets"),
+      color: "from-purple-600 to-violet-700",
+    },
+    {
+      name: t("nav.sale"),
+      icon: Tag,
+      image: gardenFlowers,
+      href: "/shop?category=sale",
+      description: t("category.upTo40"),
+      color: "from-red-500 to-rose-600",
+      isSale: true,
+    },
+  ];
+
   return (
     <section className="py-8 md:py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -83,10 +86,10 @@ export const CategoriesGrid = () => {
           className="text-center mb-8 md:mb-10"
         >
           <p className="text-xs uppercase tracking-widest text-primary font-semibold mb-2">
-            Browse by Category
+            {t("categories.browse")}
           </p>
           <h2 className="font-display text-2xl md:text-3xl font-normal text-foreground">
-            Shop Our Collections
+            {t("categories.title")}
           </h2>
         </motion.div>
 
@@ -153,7 +156,7 @@ export const CategoriesGrid = () => {
                 </div>
                 {category.isSale && (
                   <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse">
-                    SALE
+                    {t("product.sale").toUpperCase()}
                   </div>
                 )}
               </Link>
@@ -168,14 +171,14 @@ export const CategoriesGrid = () => {
             className="relative h-20 rounded-2xl overflow-hidden bg-gradient-to-r from-red-500 to-rose-600 flex items-center justify-center"
           >
             <Tag className="w-5 h-5 text-white mr-2" />
-            <span className="text-white font-semibold text-sm">Sale 40% Off</span>
+            <span className="text-white font-semibold text-sm">{t("category.sale40")}</span>
           </Link>
           <Link
             to="/shop?sort=newest"
             className="relative h-20 rounded-2xl overflow-hidden bg-gradient-to-r from-primary to-emerald-700 flex items-center justify-center"
           >
             <Sparkles className="w-5 h-5 text-white mr-2" />
-            <span className="text-white font-semibold text-sm">New Arrivals</span>
+            <span className="text-white font-semibold text-sm">{t("header.newArrivals")}</span>
           </Link>
         </div>
       </div>
