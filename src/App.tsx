@@ -20,6 +20,7 @@ import ReturnPolicy from "./pages/ReturnPolicy";
 import VIPProgram from "./pages/VIPProgram";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/returns" element={<ReturnPolicy />} />
             <Route path="/vip" element={<VIPProgram />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/account" element={<Account />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
