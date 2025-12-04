@@ -5,8 +5,8 @@ import { Footer } from "@/components/layout/Footer";
 import { ShopifyProductCard } from "@/components/products/ShopifyProductCard";
 import { ProductFilters } from "@/components/products/ProductFilters";
 import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
-import { Search, SlidersHorizontal, Grid3X3, LayoutGrid, ChevronDown, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Search, SlidersHorizontal, Grid3X3, LayoutGrid, ChevronDown, X, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const categories = [
@@ -37,17 +37,41 @@ export default function Shop() {
   const [gridView, setGridView] = useState<"large" | "small">("large");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Extract unique tags from products
   const allTags = useMemo(() => {
     const tags = new Set<string>();
     products.forEach((p) => {
-      // Parse tags if available in product data
       const productTags = ["indoor", "outdoor", "low-maintenance", "tropical", "decorative", "air-purifying"];
       productTags.forEach((tag) => tags.add(tag));
     });
     return Array.from(tags);
+  }, [products]);
+
+  // Extract colors and sizes from product options
+  const { allColors, allSizes } = useMemo(() => {
+    const colors = new Set<string>();
+    const sizes = new Set<string>();
+    
+    products.forEach((p) => {
+      p.node.options?.forEach((opt) => {
+        if (opt.name.toLowerCase() === "color" || opt.name.toLowerCase() === "colour") {
+          opt.values.forEach((v) => colors.add(v));
+        }
+        if (opt.name.toLowerCase() === "size") {
+          opt.values.forEach((v) => sizes.add(v));
+        }
+      });
+    });
+    
+    return { 
+      allColors: Array.from(colors), 
+      allSizes: Array.from(sizes) 
+    };
   }, [products]);
 
   // Calculate max price
@@ -85,13 +109,15 @@ export default function Shop() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSearching(true);
     const params = new URLSearchParams(searchParams);
-    if (searchQuery) {
-      params.set("q", searchQuery);
+    if (searchQuery.trim()) {
+      params.set("q", searchQuery.trim());
     } else {
       params.delete("q");
     }
     setSearchParams(params);
+    setTimeout(() => setIsSearching(false), 500);
   };
 
   const handleCategoryChange = (category: string) => {
@@ -109,6 +135,8 @@ export default function Shop() {
     setSelectedCategory("all");
     setPriceRange([0, maxPrice]);
     setSelectedTags([]);
+    setSelectedColors([]);
+    setSelectedSizes([]);
     setSearchQuery("");
     setSearchParams(new URLSearchParams());
   };
@@ -122,6 +150,26 @@ export default function Shop() {
       const price = parseFloat(p.node.priceRange.minVariantPrice.amount);
       return price >= priceRange[0] && price <= priceRange[1];
     });
+
+    // Color filter
+    if (selectedColors.length > 0) {
+      result = result.filter((p) => {
+        const colorOption = p.node.options?.find(
+          (opt) => opt.name.toLowerCase() === "color" || opt.name.toLowerCase() === "colour"
+        );
+        if (!colorOption) return false;
+        return colorOption.values.some((v) => selectedColors.includes(v));
+      });
+    }
+
+    // Size filter
+    if (selectedSizes.length > 0) {
+      result = result.filter((p) => {
+        const sizeOption = p.node.options?.find((opt) => opt.name.toLowerCase() === "size");
+        if (!sizeOption) return false;
+        return sizeOption.values.some((v) => selectedSizes.includes(v));
+      });
+    }
 
     // Sort
     switch (sortBy) {
@@ -144,12 +192,14 @@ export default function Shop() {
     }
 
     return result;
-  }, [products, priceRange, sortBy]);
+  }, [products, priceRange, sortBy, selectedColors, selectedSizes]);
 
   const activeFiltersCount = 
     (selectedCategory !== "all" ? 1 : 0) + 
     (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) + 
-    selectedTags.length;
+    selectedTags.length +
+    selectedColors.length +
+    selectedSizes.length;
 
   const FilterSidebar = () => (
     <ProductFilters
@@ -162,6 +212,12 @@ export default function Shop() {
       tags={allTags}
       selectedTags={selectedTags}
       onTagsChange={setSelectedTags}
+      colors={allColors}
+      selectedColors={selectedColors}
+      onColorsChange={setSelectedColors}
+      sizes={allSizes}
+      selectedSizes={selectedSizes}
+      onSizesChange={setSelectedSizes}
       onClearAll={handleClearAll}
     />
   );
@@ -216,16 +272,17 @@ export default function Shop() {
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Search products..."
+                        placeholder="Search by name, category, type..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-4 pr-12 py-3 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d5a3d]/20"
                       />
                       <button 
                         type="submit"
-                        className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-[#2d5a3d] text-white rounded-lg hover:bg-[#234a31] transition-colors"
+                        disabled={isSearching}
+                        className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-[#2d5a3d] text-white rounded-lg hover:bg-[#234a31] transition-colors disabled:opacity-50"
                       >
-                        <Search className="w-4 h-4" />
+                        {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                       </button>
                     </div>
                   </form>
@@ -355,29 +412,15 @@ export default function Shop() {
                   ))}
                 </div>
               ) : filteredAndSortedProducts.length > 0 ? (
-                <motion.div 
-                  layout
-                  className={`grid gap-6 ${
-                    gridView === "large" 
-                      ? "grid-cols-2 md:grid-cols-3" 
-                      : "grid-cols-3 md:grid-cols-4"
-                  }`}
-                >
-                  <AnimatePresence mode="popLayout">
-                    {filteredAndSortedProducts.map((product, index) => (
-                      <motion.div
-                        key={product.node.id}
-                        layout
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.2, delay: index * 0.03 }}
-                      >
-                        <ShopifyProductCard product={product} />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
+                <div className={`grid gap-6 ${
+                  gridView === "large" 
+                    ? "grid-cols-2 md:grid-cols-3" 
+                    : "grid-cols-3 md:grid-cols-4"
+                }`}>
+                  {filteredAndSortedProducts.map((product) => (
+                    <ShopifyProductCard key={product.node.id} product={product} />
+                  ))}
+                </div>
               ) : (
                 <div className="text-center py-16 bg-white rounded-xl">
                   <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
