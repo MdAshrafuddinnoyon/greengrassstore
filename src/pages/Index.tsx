@@ -2,6 +2,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
 import { ProductSection } from "@/components/products/ProductSection";
+import { ShopifyProductGrid } from "@/components/products/ShopifyProductGrid";
 import { CategoryBanner } from "@/components/home/CategoryBanner";
 import { PromoSection } from "@/components/home/PromoSection";
 import { GiftSection } from "@/components/home/GiftSection";
@@ -29,6 +30,9 @@ const Index = () => {
       <main>
         {/* Hero Section */}
         <HeroSection />
+
+        {/* Shopify Products - Real Products from Store */}
+        <ShopifyProductGrid title="Shop Our Products" limit={8} />
 
         {/* PLANTS Section */}
         <ProductSection
