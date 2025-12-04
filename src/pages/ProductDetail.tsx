@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { RelatedProducts } from "@/components/products/RelatedProducts";
+import { WhatsAppOrderButton } from "@/components/chat/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Minus, Plus, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, ChevronRight, Check } from "lucide-react";
@@ -338,6 +339,15 @@ const ProductDetail = () => {
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Add to Cart
                 </Button>
+
+                {/* WhatsApp Order */}
+                <WhatsAppOrderButton
+                  productName={product.title}
+                  productPrice={`${selectedVariant?.price.currencyCode} ${parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}`}
+                  variant={selectedVariant?.title !== "Default Title" ? selectedVariant?.title : undefined}
+                  quantity={quantity}
+                  className="flex-1 h-12"
+                />
 
                 {/* Wishlist & Share */}
                 <div className="flex gap-2">
