@@ -3,17 +3,39 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Instagram, Facebook, Truck, RefreshCw, CreditCard, MapPin, Send } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Footer = () => {
   const { t, language } = useLanguage();
   const isArabic = language === "ar";
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      toast.success(t("footer.subscribed"));
+    if (!email) return;
+    
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .insert({ email, source: 'footer' });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.info("You're already subscribed!");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success(t("footer.subscribed"));
+      }
       setEmail("");
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      toast.error("Failed to subscribe. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -43,9 +65,10 @@ export const Footer = () => {
               </div>
               <button
                 type="submit"
-                className="px-6 py-3 bg-white text-[#3d3d35] font-semibold text-sm hover:bg-gray-100 transition-colors"
+                disabled={isSubmitting}
+                className="px-6 py-3 bg-white text-[#3d3d35] font-semibold text-sm hover:bg-gray-100 transition-colors disabled:opacity-50"
               >
-                {t("footer.submit")}
+                {isSubmitting ? "..." : t("footer.submit")}
               </button>
             </form>
           </div>
