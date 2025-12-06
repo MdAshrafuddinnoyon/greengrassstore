@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -12,6 +11,9 @@ import { Plus, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MediaPicker } from "./MediaPicker";
+import { ExportButtons } from "./ExportButtons";
+import { RichTextEditor } from "./RichTextEditor";
+import { AIContentGenerator } from "./AIContentGenerator";
 
 interface BlogPost {
   id: string;
@@ -174,21 +176,29 @@ export const BlogManager = () => {
             <CardTitle>Blog Posts</CardTitle>
             <CardDescription>Manage your blog content</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openNewPostDialog}>
-                <Plus className="w-4 h-4 mr-2" />
-                New Post
+          <div className="flex gap-2">
+            <ExportButtons data={posts} filename="blog_posts" />
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openNewPostDialog}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Post
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingPost ? "Edit Post" : "Create New Post"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="title">Title</Label>
+                      <AIContentGenerator 
+                        type="blog" 
+                        onGenerate={(c) => c.title && setFormData({ ...formData, title: c.title })} 
+                      />
+                    </div>
                     <Input
                       id="title"
                       value={formData.title}
@@ -209,23 +219,20 @@ export const BlogManager = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="excerpt">Excerpt</Label>
-                  <Textarea
+                  <Input
                     id="excerpt"
                     value={formData.excerpt}
                     onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                     required
-                    rows={2}
+                    placeholder="Short description for the blog post"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    required
-                    rows={8}
+                  <Label>Content</Label>
+                  <RichTextEditor
+                    content={formData.content}
+                    onChange={(content) => setFormData({ ...formData, content })}
                   />
                 </div>
 
@@ -291,7 +298,8 @@ export const BlogManager = () => {
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
