@@ -1,8 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Loader2, X } from "lucide-react";
-import { fetchProducts, ShopifyProduct } from "@/lib/shopify";
+import { Search, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+
+interface LocalProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  currency: string;
+  featured_image: string | null;
+}
 
 interface SearchSuggestionsProps {
   className?: string;
@@ -13,14 +22,14 @@ interface SearchSuggestionsProps {
 export const SearchSuggestions = ({ className, placeholder = "What are you looking for?", onClose }: SearchSuggestionsProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ShopifyProduct[]>([]);
+  const [results, setResults] = useState<LocalProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Debounced search
+  // Debounced search - now searches local Supabase products
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -35,8 +44,15 @@ export const SearchSuggestions = ({ className, placeholder = "What are you looki
     setLoading(true);
     debounceRef.current = setTimeout(async () => {
       try {
-        const products = await fetchProducts(8, query.trim());
-        setResults(products);
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, name, slug, price, currency, featured_image')
+          .eq('is_active', true)
+          .or(`name.ilike.%${query.trim()}%,description.ilike.%${query.trim()}%,category.ilike.%${query.trim()}%`)
+          .limit(8);
+
+        if (error) throw error;
+        setResults(data || []);
         setShowDropdown(true);
       } catch (error) {
         console.error("Search error:", error);
@@ -80,8 +96,8 @@ export const SearchSuggestions = ({ className, placeholder = "What are you looki
     }
   };
 
-  const handleProductClick = (handle: string) => {
-    navigate(`/product/${handle}`);
+  const handleProductClick = (slug: string) => {
+    navigate(`/product/${slug}`);
     setQuery("");
     setShowDropdown(false);
     onClose?.();
@@ -134,23 +150,23 @@ export const SearchSuggestions = ({ className, placeholder = "What are you looki
               <div className="p-2">
                 {results.map((product) => (
                   <button
-                    key={product.node.id}
-                    onClick={() => handleProductClick(product.node.handle)}
+                    key={product.id}
+                    onClick={() => handleProductClick(product.slug)}
                     className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
                   >
-                    {product.node.images.edges[0] && (
+                    {product.featured_image && (
                       <img
-                        src={product.node.images.edges[0].node.url}
-                        alt={product.node.title}
+                        src={product.featured_image}
+                        alt={product.name}
                         className="w-12 h-12 object-cover rounded-md"
                       />
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
-                        {product.node.title}
+                        {product.name}
                       </p>
                       <p className="text-sm text-[#2d5a3d] font-medium">
-                        AED {parseFloat(product.node.priceRange.minVariantPrice.amount).toFixed(2)}
+                        {product.currency} {product.price.toFixed(2)}
                       </p>
                     </div>
                   </button>
