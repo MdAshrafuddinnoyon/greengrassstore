@@ -4,11 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Users, Search, Eye, Mail, Phone, MapPin, Calendar, ShoppingBag } from "lucide-react";
+import { 
+  Loader2, Users, Search, Eye, Phone, MapPin, Calendar, ShoppingBag, 
+  Trash2, UserPlus, Download, Upload, FileSpreadsheet, RefreshCw
+} from "lucide-react";
+import { ExportButtons } from "./ExportButtons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Customer {
   id: string;
@@ -31,11 +51,29 @@ export const CustomerManager = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerOrders, setCustomerOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  
+  // Add customer dialog
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({
+    full_name: "",
+    phone: "",
+    address: "",
+    city: "",
+    country: ""
+  });
+  
+  // Delete confirmation
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // CSV Import
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      // Fetch profiles (customers)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -43,14 +81,12 @@ export const CustomerManager = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch orders to calculate stats
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
         .select('user_id, total');
 
       if (ordersError) throw ordersError;
 
-      // Calculate stats per customer
       const statsMap = new Map<string, { count: number; total: number }>();
       orders?.forEach(order => {
         if (order.user_id) {
@@ -62,10 +98,9 @@ export const CustomerManager = () => {
         }
       });
 
-      // Merge profiles with stats
       const customersWithStats = profiles?.map(profile => ({
         ...profile,
-        email: '', // Will need to fetch from auth if needed
+        email: '',
         orders_count: statsMap.get(profile.user_id)?.count || 0,
         total_spent: statsMap.get(profile.user_id)?.total || 0
       })) || [];
@@ -112,6 +147,136 @@ export const CustomerManager = () => {
     fetchCustomerOrders(customer.user_id);
   };
 
+  const handleAddCustomer = async () => {
+    if (!newCustomer.full_name.trim()) {
+      toast.error("Customer name is required");
+      return;
+    }
+
+    setAddLoading(true);
+    try {
+      // Create a new profile with a placeholder user_id
+      const tempUserId = crypto.randomUUID();
+      
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: tempUserId,
+          full_name: newCustomer.full_name,
+          phone: newCustomer.phone || null,
+          address: newCustomer.address || null,
+          city: newCustomer.city || null,
+          country: newCustomer.country || null
+        });
+
+      if (error) throw error;
+
+      toast.success("Customer added successfully");
+      setIsAddDialogOpen(false);
+      setNewCustomer({ full_name: "", phone: "", address: "", city: "", country: "" });
+      fetchCustomers();
+    } catch (error) {
+      console.error('Error adding customer:', error);
+      toast.error("Failed to add customer");
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const handleDeleteCustomer = async () => {
+    if (!customerToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', customerToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Customer deleted successfully");
+      setDeleteConfirmOpen(false);
+      setCustomerToDelete(null);
+      fetchCustomers();
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      toast.error("Failed to delete customer");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const lines = text.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        
+        const customersToImport = [];
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          
+          const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+          const customer: Record<string, string> = {};
+          
+          headers.forEach((header, index) => {
+            customer[header] = values[index] || '';
+          });
+
+          if (customer.full_name || customer.name) {
+            customersToImport.push({
+              user_id: crypto.randomUUID(),
+              full_name: customer.full_name || customer.name,
+              phone: customer.phone || null,
+              address: customer.address || null,
+              city: customer.city || null,
+              country: customer.country || null
+            });
+          }
+        }
+
+        if (customersToImport.length === 0) {
+          toast.error("No valid customers found in CSV");
+          return;
+        }
+
+        const { error } = await supabase
+          .from('profiles')
+          .insert(customersToImport);
+
+        if (error) throw error;
+
+        toast.success(`${customersToImport.length} customers imported successfully`);
+        setIsImportDialogOpen(false);
+        fetchCustomers();
+      } catch (error) {
+        console.error('Error importing CSV:', error);
+        toast.error("Failed to import customers");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
+  const getExportData = () => {
+    return filteredCustomers.map(c => ({
+      Name: c.full_name || '',
+      Phone: c.phone || '',
+      Address: c.address || '',
+      City: c.city || '',
+      Country: c.country || '',
+      Orders: c.orders_count || 0,
+      'Total Spent (AED)': (c.total_spent || 0).toFixed(2),
+      'Joined Date': new Date(c.created_at).toLocaleDateString()
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -134,9 +299,35 @@ export const CustomerManager = () => {
                 {customers.length} registered customers
               </CardDescription>
             </div>
-            <Button variant="outline" onClick={fetchCustomers}>
-              Refresh
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={fetchCustomers}>
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Refresh
+              </Button>
+              <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-1" />
+                Add Customer
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Upload className="w-4 h-4 mr-1" />
+                    Import
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setIsImportDialogOpen(true)}>
+                    <FileSpreadsheet className="w-4 h-4 mr-2" />
+                    Import from CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <ExportButtons 
+                data={getExportData()} 
+                filename="customers" 
+                label="Export"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -203,13 +394,26 @@ export const CustomerManager = () => {
                         {new Date(customer.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewCustomer(customer)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewCustomer(customer)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => {
+                              setCustomerToDelete(customer);
+                              setDeleteConfirmOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -219,6 +423,125 @@ export const CustomerManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Customer Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Add New Customer
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="customer-name">Full Name *</Label>
+              <Input
+                id="customer-name"
+                value={newCustomer.full_name}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, full_name: e.target.value }))}
+                placeholder="Enter customer name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-phone">Phone</Label>
+              <Input
+                id="customer-phone"
+                value={newCustomer.phone}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="+971 XX XXX XXXX"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customer-address">Address</Label>
+              <Input
+                id="customer-address"
+                value={newCustomer.address}
+                onChange={(e) => setNewCustomer(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Full address"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="customer-city">City</Label>
+                <Input
+                  id="customer-city"
+                  value={newCustomer.city}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, city: e.target.value }))}
+                  placeholder="Dubai"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="customer-country">Country</Label>
+                <Input
+                  id="customer-country"
+                  value={newCustomer.country}
+                  onChange={(e) => setNewCustomer(prev => ({ ...prev, country: e.target.value }))}
+                  placeholder="UAE"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCustomer} disabled={addLoading}>
+              {addLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Add Customer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import CSV Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5" />
+              Import Customers from CSV
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Upload a CSV file with customer data. The file should have columns for: 
+              full_name (or name), phone, address, city, country
+            </p>
+            <div className="border-2 border-dashed rounded-lg p-6 text-center">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={handleImportCSV}
+                className="cursor-pointer"
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{customerToDelete?.full_name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCustomer}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteLoading}
+            >
+              {deleteLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Customer Detail Dialog */}
       <Dialog open={!!selectedCustomer} onOpenChange={() => setSelectedCustomer(null)}>
