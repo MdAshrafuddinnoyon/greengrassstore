@@ -9,6 +9,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { FloatingActionMenu } from "@/components/FloatingActionMenu";
 import { CompareDrawer } from "@/components/compare/CompareDrawer";
 import Index from "./pages/Index";
+import Admin from "./pages/Admin";
 import ProductDetail from "./pages/ProductDetail";
 import Shop from "./pages/Shop";
 import Blog from "./pages/Blog";
@@ -37,6 +38,7 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/product/:handle" element={<ProductDetail />} />
             <Route path="/blog" element={<Blog />} />
