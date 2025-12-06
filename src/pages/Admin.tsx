@@ -33,6 +33,7 @@ import { PaymentSettingsManager } from "@/components/admin/PaymentSettingsManage
 import { TrackingPixelManager } from "@/components/admin/TrackingPixelManager";
 import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
 import { EmailTemplateManager } from "@/components/admin/EmailTemplateManager";
+import { FooterMenuManager } from "@/components/admin/FooterMenuManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -160,7 +161,11 @@ const Admin = () => {
               </TabsTrigger>
               <TabsTrigger value="content" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
                 <Palette className="w-4 h-4" />
-                <span className="hidden sm:inline">Content</span>
+                <span className="hidden sm:inline">Branding</span>
+              </TabsTrigger>
+              <TabsTrigger value="footer" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Menu className="w-4 h-4" />
+                <span className="hidden sm:inline">Footer</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
                 <Settings className="w-4 h-4" />
@@ -260,6 +265,10 @@ const Admin = () => {
 
             <TabsContent value="content" className="m-0">
               <SiteContentManager />
+            </TabsContent>
+
+            <TabsContent value="footer" className="m-0">
+              <FooterMenuManager />
             </TabsContent>
 
             <TabsContent value="settings" className="m-0">

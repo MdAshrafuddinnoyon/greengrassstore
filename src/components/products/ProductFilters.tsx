@@ -60,13 +60,21 @@ export const ProductFilters = ({
   sizes = [],
   selectedSizes = [],
   onSizesChange,
+  materials = [],
+  selectedMaterials = [],
+  onMaterialsChange,
   onClearAll,
-}: FilterProps) => {
+}: FilterProps & {
+  materials?: string[];
+  selectedMaterials?: string[];
+  onMaterialsChange?: (materials: string[]) => void;
+}) => {
   const [openSections, setOpenSections] = useState({
     category: true,
     price: true,
     colors: true,
     sizes: true,
+    materials: true,
     tags: false,
   });
 
@@ -100,11 +108,21 @@ export const ProductFilters = ({
     }
   };
 
+  const handleMaterialToggle = (material: string) => {
+    if (!onMaterialsChange) return;
+    if (selectedMaterials?.includes(material)) {
+      onMaterialsChange(selectedMaterials.filter((m) => m !== material));
+    } else {
+      onMaterialsChange([...(selectedMaterials || []), material]);
+    }
+  };
+
   const hasActiveFilters = 
     selectedCategory !== "all" || 
     selectedTags.length > 0 || 
     selectedColors.length > 0 || 
     selectedSizes.length > 0 || 
+    (selectedMaterials?.length || 0) > 0 ||
     priceRange[0] > 0 || 
     priceRange[1] < maxPrice;
 
@@ -285,6 +303,41 @@ export const ProductFilters = ({
                       }`}
                     >
                       {size}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Materials Filter */}
+      {materials && materials.length > 0 && (
+        <div className="border-b border-gray-100">
+          <button
+            onClick={() => toggleSection("materials")}
+            className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
+          >
+            <span className="font-medium text-gray-900">Material</span>
+            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${openSections.materials ? "rotate-180" : ""}`} />
+          </button>
+          {openSections.materials && (
+            <div className="px-4 pb-4">
+              <div className="flex flex-wrap gap-2">
+                {materials.map((material) => {
+                  const isSelected = selectedMaterials?.includes(material);
+                  return (
+                    <button
+                      key={material}
+                      onClick={() => handleMaterialToggle(material)}
+                      className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${
+                        isSelected
+                          ? "bg-[#2d5a3d] text-white border-[#2d5a3d]"
+                          : "bg-white text-gray-700 border-gray-200 hover:border-[#2d5a3d]"
+                      }`}
+                    >
+                      {material}
                     </button>
                   );
                 })}
