@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, LayoutDashboard, FileText, Users, Settings, ShoppingBag, MessageSquare, BarChart3, Image, Receipt, Mail, Palette, Key, Megaphone, Sparkles, FolderTree, LayoutTemplate } from "lucide-react";
+import { Loader2, LayoutDashboard, FileText, Users, Settings, ShoppingBag, MessageSquare, BarChart3, Image, Receipt, Mail, Palette, Key, Megaphone, Sparkles, FolderTree, LayoutTemplate, Menu, BookOpen } from "lucide-react";
 import { useAdminStore } from "@/stores/adminStore";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,6 +24,8 @@ import { AnnouncementManager } from "@/components/admin/AnnouncementManager";
 import { AIImageGenerator } from "@/components/admin/AIImageGenerator";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 import { HomepageSectionsManager } from "@/components/admin/HomepageSectionsManager";
+import { PagesContentManager } from "@/components/admin/PagesContentManager";
+import { MegaMenuManager } from "@/components/admin/MegaMenuManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -141,6 +143,14 @@ const Admin = () => {
                 <LayoutTemplate className="w-4 h-4" />
                 <span className="hidden sm:inline">Homepage</span>
               </TabsTrigger>
+              <TabsTrigger value="megamenu" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Menu className="w-4 h-4" />
+                <span className="hidden sm:inline">Mega Menu</span>
+              </TabsTrigger>
+              <TabsTrigger value="pages" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <BookOpen className="w-4 h-4" />
+                <span className="hidden sm:inline">Pages</span>
+              </TabsTrigger>
               <TabsTrigger value="content" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
                 <Palette className="w-4 h-4" />
                 <span className="hidden sm:inline">Content</span>
@@ -204,6 +214,14 @@ const Admin = () => {
 
             <TabsContent value="homepage" className="m-0">
               <HomepageSectionsManager />
+            </TabsContent>
+
+            <TabsContent value="megamenu" className="m-0">
+              <MegaMenuManager />
+            </TabsContent>
+
+            <TabsContent value="pages" className="m-0">
+              <PagesContentManager />
             </TabsContent>
 
             <TabsContent value="content" className="m-0">
