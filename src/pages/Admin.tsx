@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, LayoutDashboard, FileText, Users, Settings, ShoppingBag, MessageSquare, BarChart3, Image, Upload, FolderOpen, FileSpreadsheet, Receipt } from "lucide-react";
+import { Loader2, LayoutDashboard, FileText, Users, Settings, ShoppingBag, MessageSquare, BarChart3, Image, FileSpreadsheet, Receipt, Mail, Palette, Key } from "lucide-react";
 import { useAdminStore } from "@/stores/adminStore";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,11 +15,12 @@ import { UsersManager } from "@/components/admin/UsersManager";
 import { DashboardOverview } from "@/components/admin/DashboardOverview";
 import { MediaLibrary } from "@/components/admin/MediaLibrary";
 import { ProductImporter } from "@/components/admin/ProductImporter";
-import { BlogImporter } from "@/components/admin/BlogImporter";
-import { FileManager } from "@/components/admin/FileManager";
 import { SiteSettingsManager } from "@/components/admin/SiteSettingsManager";
 import { OrdersManager } from "@/components/admin/OrdersManager";
 import { ProductManager } from "@/components/admin/ProductManager";
+import { SubscribersManager } from "@/components/admin/SubscribersManager";
+import { SiteContentManager } from "@/components/admin/SiteContentManager";
+import { APISettingsManager } from "@/components/admin/APISettingsManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -68,106 +69,128 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50">
       <Header />
       <main className="container mx-auto px-4 py-8 pb-20 md:pb-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-2">
-            <LayoutDashboard className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-            <Badge className="bg-primary text-primary-foreground">Admin</Badge>
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <LayoutDashboard className="w-6 h-6 text-primary" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+            <Badge className="bg-primary/10 text-primary border-0 font-medium">Admin</Badge>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-slate-500 ml-14">
             Manage your store content, users, and settings
           </p>
         </div>
 
         {/* Admin Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="flex flex-wrap w-full gap-1 h-auto p-1 bg-muted/50">
-            <TabsTrigger value="overview" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <BarChart3 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Overview</span>
-            </TabsTrigger>
-            <TabsTrigger value="products" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Products</span>
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <Receipt className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Orders</span>
-            </TabsTrigger>
-            <TabsTrigger value="blog" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <FileText className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Blog</span>
-            </TabsTrigger>
-            <TabsTrigger value="requests" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Requests</span>
-            </TabsTrigger>
-            <TabsTrigger value="media" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <Image className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Media</span>
-            </TabsTrigger>
-            <TabsTrigger value="import-products" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Import</span>
-            </TabsTrigger>
-            <TabsTrigger value="users" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <Users className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Users</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1.5 py-2 px-2 text-xs sm:text-sm">
-              <Settings className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Settings</span>
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-2">
+            <TabsList className="flex flex-wrap w-full gap-1 h-auto bg-transparent">
+              <TabsTrigger value="overview" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <BarChart3 className="w-4 h-4" />
+                <span className="hidden sm:inline">Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="products" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <ShoppingBag className="w-4 h-4" />
+                <span className="hidden sm:inline">Products</span>
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Receipt className="w-4 h-4" />
+                <span className="hidden sm:inline">Orders</span>
+              </TabsTrigger>
+              <TabsTrigger value="blog" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <FileText className="w-4 h-4" />
+                <span className="hidden sm:inline">Blog</span>
+              </TabsTrigger>
+              <TabsTrigger value="subscribers" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Mail className="w-4 h-4" />
+                <span className="hidden sm:inline">Subscribers</span>
+              </TabsTrigger>
+              <TabsTrigger value="requests" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline">Requests</span>
+              </TabsTrigger>
+              <TabsTrigger value="media" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Image className="w-4 h-4" />
+                <span className="hidden sm:inline">Media</span>
+              </TabsTrigger>
+              <TabsTrigger value="import" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <FileSpreadsheet className="w-4 h-4" />
+                <span className="hidden lg:inline">Import</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Users className="w-4 h-4" />
+                <span className="hidden sm:inline">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="content" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Palette className="w-4 h-4" />
+                <span className="hidden sm:inline">Content</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </TabsTrigger>
+              <TabsTrigger value="api" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <Key className="w-4 h-4" />
+                <span className="hidden sm:inline">API</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview">
-            <DashboardOverview />
-          </TabsContent>
+          {/* Tab Contents */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+            <TabsContent value="overview" className="m-0">
+              <DashboardOverview />
+            </TabsContent>
 
-          {/* Products Tab */}
-          <TabsContent value="products">
-            <ProductManager />
-          </TabsContent>
+            <TabsContent value="products" className="m-0">
+              <ProductManager />
+            </TabsContent>
 
-          {/* Orders Tab */}
-          <TabsContent value="orders">
-            <OrdersManager />
-          </TabsContent>
+            <TabsContent value="orders" className="m-0">
+              <OrdersManager />
+            </TabsContent>
 
-          {/* Blog Management Tab */}
-          <TabsContent value="blog">
-            <BlogManager />
-          </TabsContent>
+            <TabsContent value="blog" className="m-0">
+              <BlogManager />
+            </TabsContent>
 
-          {/* Custom Requests Tab */}
-          <TabsContent value="requests">
-            <CustomRequestsManager />
-          </TabsContent>
+            <TabsContent value="subscribers" className="m-0">
+              <SubscribersManager />
+            </TabsContent>
 
-          {/* Media Library Tab */}
-          <TabsContent value="media">
-            <MediaLibrary />
-          </TabsContent>
+            <TabsContent value="requests" className="m-0">
+              <CustomRequestsManager />
+            </TabsContent>
 
-          {/* Product Import Tab */}
-          <TabsContent value="import-products">
-            <ProductImporter />
-          </TabsContent>
+            <TabsContent value="media" className="m-0">
+              <MediaLibrary />
+            </TabsContent>
 
-          {/* Users Tab */}
-          <TabsContent value="users">
-            <UsersManager />
-          </TabsContent>
+            <TabsContent value="import" className="m-0">
+              <ProductImporter />
+            </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent value="settings">
-            <SiteSettingsManager />
-          </TabsContent>
+            <TabsContent value="users" className="m-0">
+              <UsersManager />
+            </TabsContent>
+
+            <TabsContent value="content" className="m-0">
+              <SiteContentManager />
+            </TabsContent>
+
+            <TabsContent value="settings" className="m-0">
+              <SiteSettingsManager />
+            </TabsContent>
+
+            <TabsContent value="api" className="m-0">
+              <APISettingsManager />
+            </TabsContent>
+          </div>
         </Tabs>
       </main>
       <Footer />
