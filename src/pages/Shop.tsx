@@ -39,6 +39,7 @@ export default function Shop() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -90,8 +91,28 @@ export default function Shop() {
       if (p.option2_name?.toLowerCase().includes('size') && p.option2_values) {
         p.option2_values.forEach((s: string) => sizeSet.add(s));
       }
+      if (p.option3_name?.toLowerCase().includes('size') && p.option3_values) {
+        p.option3_values.forEach((s: string) => sizeSet.add(s));
+      }
     });
     return Array.from(sizeSet);
+  }, [products]);
+
+  // Extract unique materials from products dynamically
+  const availableMaterials = useMemo(() => {
+    const materialSet = new Set<string>();
+    products.forEach((p: any) => {
+      if (p.option1_name?.toLowerCase().includes('material') && p.option1_values) {
+        p.option1_values.forEach((m: string) => materialSet.add(m));
+      }
+      if (p.option2_name?.toLowerCase().includes('material') && p.option2_values) {
+        p.option2_values.forEach((m: string) => materialSet.add(m));
+      }
+      if (p.option3_name?.toLowerCase().includes('material') && p.option3_values) {
+        p.option3_values.forEach((m: string) => materialSet.add(m));
+      }
+    });
+    return Array.from(materialSet);
   }, [products]);
 
   // Calculate max price
@@ -178,6 +199,8 @@ export default function Shop() {
     setSelectedTags([]);
     setSelectedColors([]);
     setSelectedSizes([]);
+    setSelectedMaterials([]);
+    setSelectedSizes([]);
     setSearchQuery("");
     setSearchParams(new URLSearchParams());
   };
@@ -230,7 +253,27 @@ export default function Shop() {
         if (p.option2_name?.toLowerCase().includes('size') && p.option2_values) {
           productSizes.push(...p.option2_values);
         }
+        if (p.option3_name?.toLowerCase().includes('size') && p.option3_values) {
+          productSizes.push(...p.option3_values);
+        }
         return selectedSizes.some(s => productSizes.includes(s));
+      });
+    }
+
+    // Material filter
+    if (selectedMaterials.length > 0) {
+      result = result.filter((p: any) => {
+        const productMaterials: string[] = [];
+        if (p.option1_name?.toLowerCase().includes('material') && p.option1_values) {
+          productMaterials.push(...p.option1_values);
+        }
+        if (p.option2_name?.toLowerCase().includes('material') && p.option2_values) {
+          productMaterials.push(...p.option2_values);
+        }
+        if (p.option3_name?.toLowerCase().includes('material') && p.option3_values) {
+          productMaterials.push(...p.option3_values);
+        }
+        return selectedMaterials.some(m => productMaterials.includes(m));
       });
     }
 
@@ -254,7 +297,7 @@ export default function Shop() {
     }
 
     return result;
-  }, [products, selectedCategory, priceRange, selectedColors, selectedSizes, sortBy]);
+  }, [products, selectedCategory, priceRange, selectedColors, selectedSizes, selectedMaterials, sortBy]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);
@@ -266,14 +309,15 @@ export default function Shop() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, priceRange, selectedColors, selectedSizes, searchParams]);
+  }, [selectedCategory, priceRange, selectedColors, selectedSizes, selectedMaterials, searchParams]);
 
   const activeFiltersCount = 
     (selectedCategory !== "all" ? 1 : 0) + 
     (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) + 
     selectedTags.length +
     selectedColors.length +
-    selectedSizes.length;
+    selectedSizes.length +
+    selectedMaterials.length;
 
   const FilterSidebar = () => (
     <ProductFilters
@@ -292,6 +336,9 @@ export default function Shop() {
       sizes={availableSizes}
       selectedSizes={selectedSizes}
       onSizesChange={setSelectedSizes}
+      materials={availableMaterials}
+      selectedMaterials={selectedMaterials}
+      onMaterialsChange={setSelectedMaterials}
       onClearAll={handleClearAll}
     />
   );

@@ -1,44 +1,49 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Gift } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import ikebana from "@/assets/ikebana.jpg";
-import flowerPot from "@/assets/flower-pot.jpg";
-import ficusPlant from "@/assets/ficus-plant.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
-// Default gift items (used when no custom items are set)
-const defaultGiftItems = [
-  {
-    id: "1",
-    name: "Garden Gift Set",
-    nameAr: "مجموعة هدايا الحديقة",
-    price: 199,
-    image: ikebana,
-    href: "/shop?category=gifts",
-  },
-  {
-    id: "2",
-    name: "Plant Lover Bundle",
-    nameAr: "حزمة محبي النباتات",
-    price: 149,
-    image: flowerPot,
-    href: "/shop?category=gifts",
-  },
-  {
-    id: "3",
-    name: "Indoor Oasis Kit",
-    nameAr: "مجموعة الواحة الداخلية",
-    price: 249,
-    image: ficusPlant,
-    href: "/shop?category=gifts",
-  },
-];
+interface GiftProduct {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  price: number;
+  featured_image: string | null;
+  slug: string;
+}
 
 export const GiftSection = () => {
   const { giftSection, loading } = useSiteSettings();
   const { language } = useLanguage();
   const isArabic = language === "ar";
+  const [giftProducts, setGiftProducts] = useState<GiftProduct[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+
+  // Fetch gift products from database
+  useEffect(() => {
+    const fetchGiftProducts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, name, name_ar, price, featured_image, slug')
+          .or('category.ilike.%gift%,subcategory.ilike.%gift%')
+          .eq('is_active', true)
+          .limit(6);
+        
+        if (error) throw error;
+        setGiftProducts(data || []);
+      } catch (error) {
+        console.error('Error fetching gift products:', error);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    fetchGiftProducts();
+  }, []);
 
   if (!giftSection.enabled && !loading) return null;
 
@@ -46,8 +51,21 @@ export const GiftSection = () => {
   const subtitle = isArabic ? giftSection.subtitleAr : giftSection.subtitle;
   const buttonText = isArabic ? giftSection.buttonTextAr : giftSection.buttonText;
   
-  // Use custom items if available, otherwise use defaults
-  const giftItems = giftSection.items?.length > 0 ? giftSection.items : defaultGiftItems;
+  // Use products from database, fallback to custom items from settings
+  const displayItems = giftProducts.length > 0 
+    ? giftProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        nameAr: p.name_ar || p.name,
+        price: p.price,
+        image: p.featured_image || 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500',
+        href: `/product/${p.slug}`
+      }))
+    : giftSection.items?.length > 0 
+      ? giftSection.items 
+      : [];
+
+  if (displayItems.length === 0 && !productsLoading) return null;
 
   return (
     <section className="py-8 md:py-16 bg-gradient-to-b from-background to-muted">
@@ -73,65 +91,79 @@ export const GiftSection = () => {
           </p>
         </motion.div>
 
-        {/* Mobile Horizontal Scroll */}
-        <div className="md:hidden -mx-4 px-4">
-          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-            {giftItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="snap-start flex-shrink-0 w-[200px]"
-              >
-                <Link to={item.href} className="group block">
-                  <div className="aspect-square overflow-hidden bg-muted rounded-2xl mb-2">
-                    <img
-                      src={item.image}
-                      alt={isArabic ? item.nameAr : item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <h3 className="text-sm font-medium text-foreground mb-1 line-clamp-1">
-                    {isArabic ? item.nameAr : item.name}
-                  </h3>
-                  <p className="text-sm font-bold text-primary">AED {item.price}</p>
-                </Link>
-              </motion.div>
+        {productsLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-square bg-muted rounded-xl mb-2" />
+                <div className="h-4 bg-muted rounded w-3/4 mb-1" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+              </div>
             ))}
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Mobile Horizontal Scroll */}
+            <div className="md:hidden -mx-4 px-4">
+              <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+                {displayItems.slice(0, 6).map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="snap-start flex-shrink-0 w-[200px]"
+                  >
+                    <Link to={item.href} className="group block">
+                      <div className="aspect-square overflow-hidden bg-muted rounded-2xl mb-2">
+                        <img
+                          src={item.image}
+                          alt={isArabic ? item.nameAr : item.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      <h3 className="text-sm font-medium text-foreground mb-1 line-clamp-1">
+                        {isArabic ? item.nameAr : item.name}
+                      </h3>
+                      <p className="text-sm font-bold text-primary">AED {item.price}</p>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
 
-        {/* Desktop Grid */}
-        <div className="hidden md:grid grid-cols-3 gap-6">
-          {giftItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Link
-                to={item.href}
-                className="group block"
-              >
-                <div className="aspect-square overflow-hidden bg-muted rounded-xl mb-3">
-                  <img
-                    src={item.image}
-                    alt={isArabic ? item.nameAr : item.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <h3 className="text-sm font-medium text-foreground mb-1 group-hover:text-primary transition-colors">
-                  {isArabic ? item.nameAr : item.name}
-                </h3>
-                <p className="text-sm font-bold text-foreground">AED {item.price}</p>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+            {/* Desktop Grid */}
+            <div className="hidden md:grid grid-cols-3 gap-6">
+              {displayItems.slice(0, 3).map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Link
+                    to={item.href}
+                    className="group block"
+                  >
+                    <div className="aspect-square overflow-hidden bg-muted rounded-xl mb-3">
+                      <img
+                        src={item.image}
+                        alt={isArabic ? item.nameAr : item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <h3 className="text-sm font-medium text-foreground mb-1 group-hover:text-primary transition-colors">
+                      {isArabic ? item.nameAr : item.name}
+                    </h3>
+                    <p className="text-sm font-bold text-foreground">AED {item.price}</p>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </>
+        )}
 
         <div className="text-center mt-6 md:mt-8">
           <Link
