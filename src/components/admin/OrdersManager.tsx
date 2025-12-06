@@ -285,8 +285,6 @@ export const OrdersManager = () => {
     } else {
       setSelectedIds([...selectedIds, id]);
     }
-      toast.error('Failed to delete order');
-    }
   };
 
   const printInvoice = (order: Order) => {
