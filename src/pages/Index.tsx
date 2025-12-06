@@ -1,13 +1,14 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { HeroSection } from "@/components/home/HeroSection";
-import { ShopifyProductGrid } from "@/components/products/ShopifyProductGrid";
 import { CategoriesGrid } from "@/components/home/CategoriesGrid";
 import { FeaturedCategorySection } from "@/components/home/FeaturedCategorySection";
+import { LocalProductGrid } from "@/components/products/LocalProductGrid";
 import { PromoSection } from "@/components/home/PromoSection";
 import { BlogSection } from "@/components/home/BlogSection";
 import { InstagramSection } from "@/components/home/InstagramSection";
 import { FAQSection } from "@/components/home/FAQSection";
+import { GiftSection } from "@/components/home/GiftSection";
 
 const Index = () => {
   return (
@@ -23,14 +24,19 @@ const Index = () => {
         {/* Featured Categories with Banner + Product Slider */}
         <FeaturedCategorySection />
 
-        {/* Shopify Products - All Products */}
+        {/* Local Products - All Products */}
         <section className="py-12 md:py-20 bg-background">
-          <ShopifyProductGrid 
+          <LocalProductGrid 
             title="Our Collection" 
-            subtitle="Discover our curated selection of premium plants and home décor" 
+            titleAr="مجموعتنا"
+            subtitle="Discover our curated selection of premium plants and home décor"
+            subtitleAr="اكتشف مجموعتنا المختارة من النباتات الفاخرة وديكور المنزل"
             limit={8} 
           />
         </section>
+
+        {/* Gift Section */}
+        <GiftSection />
 
         {/* Sale Banner */}
         <PromoSection />
