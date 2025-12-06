@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, LayoutDashboard, FileText, Users, Settings, ShoppingBag, MessageSquare, BarChart3, Image, Receipt, Mail, Palette, Key, Megaphone, FolderTree, LayoutTemplate, Menu, BookOpen, UserCheck, Bell, Ticket } from "lucide-react";
+import { Loader2, LayoutDashboard, FileText, Users, Settings, ShoppingBag, MessageSquare, BarChart3, Image, Receipt, Mail, Palette, Key, Megaphone, FolderTree, LayoutTemplate, Menu, BookOpen, UserCheck, Bell, Ticket, CreditCard } from "lucide-react";
 import { useAdminStore } from "@/stores/adminStore";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,6 +29,7 @@ import { CustomerManager } from "@/components/admin/CustomerManager";
 import { HeroSliderManager } from "@/components/admin/HeroSliderManager";
 import { PopupManager } from "@/components/admin/PopupManager";
 import { CouponManager } from "@/components/admin/CouponManager";
+import { PaymentSettingsManager } from "@/components/admin/PaymentSettingsManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -174,6 +175,10 @@ const Admin = () => {
                 <Ticket className="w-4 h-4" />
                 <span className="hidden sm:inline">Coupons</span>
               </TabsTrigger>
+              <TabsTrigger value="payments" className="gap-1.5 py-2.5 px-3 text-xs sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg">
+                <CreditCard className="w-4 h-4" />
+                <span className="hidden sm:inline">Payments</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -256,6 +261,10 @@ const Admin = () => {
 
             <TabsContent value="coupons" className="m-0">
               <CouponManager />
+            </TabsContent>
+
+            <TabsContent value="payments" className="m-0">
+              <PaymentSettingsManager />
             </TabsContent>
           </div>
         </Tabs>
