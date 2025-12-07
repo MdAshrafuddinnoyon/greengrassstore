@@ -6,6 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCartStore } from "@/stores/cartStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { motion } from "framer-motion";
 import { 
   ShoppingCart, 
@@ -327,10 +328,11 @@ Please confirm my order. Thank you!`;
                     <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                       {isArabic ? "رقم الهاتف" : "Phone"} *
                     </label>
-                    <Input
+                    <PhoneInput
                       value={customerInfo.phone}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                      placeholder="+971 XX XXX XXXX"
+                      onChange={(phone) => setCustomerInfo({ ...customerInfo, phone })}
+                      placeholder="XX XXX XXXX"
+                      defaultCountry="+971"
                     />
                   </div>
                   <div>
