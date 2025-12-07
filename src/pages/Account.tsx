@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { User, MapPin, Phone, Mail, Package, Heart, LogOut, Edit2, Save, Loader2, ChevronRight, Settings, Trash2, ShoppingBag, FileText, Clock, CheckCircle, AlertCircle, Plus, Download, Eye } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, MapPin, Phone, Mail, Package, Heart, LogOut, Edit2, Save, Loader2, ChevronRight, Settings, Trash2, ShoppingBag, FileText, Clock, CheckCircle, AlertCircle, Plus, Download, Eye, Lock, Bell, X, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useWishlistStore, WishlistItem } from "@/stores/wishlistStore";
@@ -74,6 +74,18 @@ const Account = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  
+  // Password change states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordChanging, setPasswordChanging] = useState(false);
+  
+  // Notifications state
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<{ id: string; message: string; type: string; created_at: string; read: boolean }[]>([]);
+  
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const isArabic = language === "ar";
@@ -234,6 +246,125 @@ const Account = () => {
       fetchOrders();
     }
   }, [activeTab, user]);
+
+  // Real-time subscription for orders
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('user-orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newOrder = payload.new as any;
+            setOrders((prev) => [{
+              ...newOrder,
+              items: Array.isArray(newOrder.items) ? newOrder.items : []
+            }, ...prev]);
+            
+            // Add notification
+            const notification = {
+              id: `order-${newOrder.id}`,
+              message: isArabic ? `تم إنشاء طلب جديد: ${newOrder.order_number}` : `New order created: ${newOrder.order_number}`,
+              type: 'order',
+              created_at: new Date().toISOString(),
+              read: false
+            };
+            setNotifications(prev => [notification, ...prev]);
+            toast.success(notification.message);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedOrder = payload.new as any;
+            setOrders((prev) => prev.map(order => 
+              order.id === updatedOrder.id 
+                ? { ...updatedOrder, items: Array.isArray(updatedOrder.items) ? updatedOrder.items : [] }
+                : order
+            ));
+            
+            // Update selected order if viewing
+            if (selectedOrder?.id === updatedOrder.id) {
+              setSelectedOrder({
+                ...updatedOrder,
+                items: Array.isArray(updatedOrder.items) ? updatedOrder.items : []
+              });
+            }
+            
+            // Add notification for status change
+            const notification = {
+              id: `status-${updatedOrder.id}-${Date.now()}`,
+              message: isArabic 
+                ? `تم تحديث حالة الطلب ${updatedOrder.order_number} إلى: ${getStatusLabel(updatedOrder.status)}`
+                : `Order ${updatedOrder.order_number} status updated to: ${getStatusLabel(updatedOrder.status)}`,
+              type: 'status',
+              created_at: new Date().toISOString(),
+              read: false
+            };
+            setNotifications(prev => [notification, ...prev]);
+            toast.info(notification.message);
+          } else if (payload.eventType === 'DELETE') {
+            const deletedOrder = payload.old as any;
+            setOrders((prev) => prev.filter(order => order.id !== deletedOrder.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isArabic, selectedOrder?.id]);
+
+  // Password change handler
+  const handlePasswordChange = async () => {
+    if (!user) return;
+    
+    if (newPassword.length < 6) {
+      toast.error(isArabic ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error(isArabic ? "كلمات المرور غير متطابقة" : "Passwords do not match");
+      return;
+    }
+
+    setPasswordChanging(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success(isArabic ? "تم تغيير كلمة المرور بنجاح" : "Password changed successfully");
+      setShowPasswordModal(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setPasswordChanging(false);
+    }
+  };
+
+  const markNotificationAsRead = (notificationId: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -906,14 +1037,44 @@ const Account = () => {
                     {t("account.accountSettings")}
                   </h2>
                   <div className="space-y-4">
-                    <button className="w-full flex items-center justify-between p-4 bg-muted rounded-xl hover:bg-muted/80 transition-colors">
-                      <span className="text-foreground">{t("account.changePassword")}</span>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    {/* Change Password */}
+                    <button 
+                      onClick={() => setShowPasswordModal(true)}
+                      className="w-full flex items-center justify-between p-4 bg-muted rounded-xl hover:bg-muted/80 transition-colors"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-foreground">{t("account.changePassword")}</span>
+                      </span>
+                      <ChevronRight className={`w-5 h-5 text-muted-foreground ${isArabic ? 'rotate-180' : ''}`} />
                     </button>
-                    <button className="w-full flex items-center justify-between p-4 bg-muted rounded-xl hover:bg-muted/80 transition-colors">
-                      <span className="text-foreground">{t("account.notifications")}</span>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                    
+                    {/* Notifications */}
+                    <button 
+                      onClick={() => setShowNotifications(true)}
+                      className="w-full flex items-center justify-between p-4 bg-muted rounded-xl hover:bg-muted/80 transition-colors"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Bell className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-foreground">{t("account.notifications")}</span>
+                        {unreadCount > 0 && (
+                          <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </span>
+                      <ChevronRight className={`w-5 h-5 text-muted-foreground ${isArabic ? 'rotate-180' : ''}`} />
                     </button>
+                    
+                    {/* Delete Account Warning */}
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                      <p className="text-sm text-amber-700 dark:text-amber-400">
+                        {isArabic 
+                          ? "لحذف حسابك، يرجى التواصل مع خدمة العملاء عبر واتساب"
+                          : "To delete your account, please contact customer support via WhatsApp"}
+                      </p>
+                    </div>
+                    
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center justify-center gap-2 p-4 bg-destructive/10 text-destructive rounded-xl hover:bg-destructive/20 transition-colors md:hidden"
@@ -1017,6 +1178,177 @@ const Account = () => {
         }}
         user={user ? { id: user.id, email: user.email || "" } : null}
       />
+
+      {/* Password Change Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setShowPasswordModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card rounded-2xl border border-border p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <KeyRound className="w-5 h-5 text-primary" />
+                  {isArabic ? "تغيير كلمة المرور" : "Change Password"}
+                </h3>
+                <button
+                  onClick={() => setShowPasswordModal(false)}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                    {isArabic ? "كلمة المرور الجديدة" : "New Password"}
+                  </label>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+                    {isArabic ? "تأكيد كلمة المرور" : "Confirm Password"}
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {isArabic 
+                    ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل"
+                    : "Password must be at least 6 characters"}
+                </p>
+
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={passwordChanging || !newPassword || !confirmPassword}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {passwordChanging ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      {isArabic ? "تحديث كلمة المرور" : "Update Password"}
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Notifications Modal */}
+      <AnimatePresence>
+        {showNotifications && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setShowNotifications(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card rounded-2xl border border-border p-6 w-full max-w-md max-h-[70vh] overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-primary" />
+                  {isArabic ? "الإشعارات" : "Notifications"}
+                  {unreadCount > 0 && (
+                    <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </h3>
+                <div className="flex items-center gap-2">
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={clearAllNotifications}
+                      className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      {isArabic ? "مسح الكل" : "Clear All"}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowNotifications(false)}
+                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                    <p className="text-muted-foreground">
+                      {isArabic ? "لا توجد إشعارات" : "No notifications"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {notifications.map((notification) => (
+                      <motion.div
+                        key={notification.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`p-4 rounded-xl cursor-pointer transition-colors ${
+                          notification.read 
+                            ? 'bg-muted/50' 
+                            : 'bg-primary/5 border border-primary/20'
+                        }`}
+                        onClick={() => markNotificationAsRead(notification.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-2 h-2 rounded-full mt-2 ${
+                            notification.read ? 'bg-muted-foreground' : 'bg-primary'
+                          }`} />
+                          <div className="flex-1">
+                            <p className="text-sm text-foreground">{notification.message}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(notification.created_at).toLocaleString(isArabic ? 'ar-AE' : 'en-AE')}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
