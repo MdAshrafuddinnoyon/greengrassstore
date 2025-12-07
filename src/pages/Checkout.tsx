@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCartStore } from "@/stores/cartStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, validatePhoneNumber } from "@/components/ui/phone-input";
 import { motion } from "framer-motion";
 import { 
   ShoppingCart, 
@@ -96,6 +96,11 @@ Please confirm my order. Thank you!`;
       toast.error(isArabic ? "يرجى إدخال الاسم ورقم الهاتف" : "Please enter name and phone number");
       return;
     }
+    
+    if (!validatePhoneNumber(customerInfo.phone)) {
+      toast.error(isArabic ? "يرجى إدخال رقم هاتف صحيح" : "Please enter a valid phone number");
+      return;
+    }
 
     const message = generateOrderMessage("📱 WhatsApp Order");
     const encodedMessage = encodeURIComponent(message);
@@ -105,6 +110,11 @@ Please confirm my order. Thank you!`;
   const handleHomeDeliveryOrder = async () => {
     if (!customerInfo.name || !customerInfo.phone || !customerInfo.address) {
       toast.error(isArabic ? "يرجى إدخال الاسم ورقم الهاتف والعنوان" : "Please enter name, phone and address");
+      return;
+    }
+    
+    if (!validatePhoneNumber(customerInfo.phone)) {
+      toast.error(isArabic ? "يرجى إدخال رقم هاتف صحيح" : "Please enter a valid phone number");
       return;
     }
 
