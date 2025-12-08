@@ -76,10 +76,42 @@ export const CartDrawer = () => {
         
         <div className="flex flex-col flex-1 pt-6 min-h-0">
           {items.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Your cart is empty</p>
+            <div className="flex-1 flex items-center justify-center px-4">
+              <div className="text-center max-w-xs mx-auto">
+                {/* Modern animated icon container */}
+                <div className="relative mx-auto mb-6 w-20 h-20 sm:w-24 sm:h-24">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full animate-pulse" />
+                  <div className="absolute inset-2 bg-gradient-to-br from-muted to-muted/50 rounded-full flex items-center justify-center shadow-inner">
+                    <ShoppingCart className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground/70" />
+                  </div>
+                </div>
+                
+                {/* Heading */}
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
+                  Your Cart is Empty
+                </h3>
+                
+                {/* Description */}
+                <p className="text-sm sm:text-base text-muted-foreground mb-6 leading-relaxed">
+                  You haven't added any products to your cart yet
+                </p>
+                
+                {/* CTA Button */}
+                <Link to="/shop" onClick={() => setIsOpen(false)}>
+                  <Button 
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+                  >
+                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    Shop Now
+                  </Button>
+                </Link>
+                
+                {/* Decorative elements */}
+                <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+                  <span className="w-8 h-px bg-border" />
+                  <span>Free shipping on orders over AED 200</span>
+                  <span className="w-8 h-px bg-border" />
+                </div>
               </div>
             </div>
           ) : (
