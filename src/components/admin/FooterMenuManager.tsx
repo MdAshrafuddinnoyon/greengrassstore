@@ -31,6 +31,7 @@ interface FooterMenuSettings {
   websiteUrl: string;
   copyrightText: string;
   copyrightTextAr: string;
+  logoUrl: string;
   sections: FooterSection[];
   socialLinks: {
     instagram: string;
@@ -52,6 +53,7 @@ const defaultSettings: FooterMenuSettings = {
   websiteUrl: "www.greengrassstore.com",
   copyrightText: "© 2025 Green Grass Store. All rights reserved.",
   copyrightTextAr: "© 2025 متجر جرين جراس. جميع الحقوق محفوظة.",
+  logoUrl: "",
   sections: [
     {
       id: "1",
@@ -265,6 +267,33 @@ export const FooterMenuManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Footer Logo */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Footer Logo</CardTitle>
+          <CardDescription>Upload or select the logo displayed in the footer</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <MediaPicker
+              label="Footer Logo"
+              value={settings.logoUrl || ""}
+              onChange={(url) => setSettings(prev => ({ ...prev, logoUrl: url }))}
+              placeholder="Select or enter logo URL"
+            />
+            {settings.logoUrl && (
+              <div className="flex items-center justify-center p-4 bg-muted/30 rounded-lg">
+                <img 
+                  src={settings.logoUrl} 
+                  alt="Footer Logo Preview" 
+                  className="max-h-20 object-contain"
+                />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* General Footer Settings */}
       <Card>
         <CardHeader>
