@@ -113,28 +113,33 @@ const Contact = () => {
   const contactInfo = [
     {
       icon: MapPin,
-      title: isArabic ? "موقعنا" : "Location",
-      details: [isArabic ? content.addressAr : content.address, isArabic ? content.addressLine2Ar : content.addressLine2],
+      title: isArabic ? "الموقع" : "Location",
+      details: isArabic 
+        ? [`${content.addressAr}`, content.addressLine2Ar]
+        : [`${content.address}`, content.addressLine2],
       color: "bg-emerald-500",
     },
     {
       icon: Phone,
-      title: isArabic ? "هاتف" : "Phone",
+      title: isArabic ? "الهاتف" : "Phone",
       details: [content.phone],
       color: "bg-blue-500",
       href: `tel:${content.phone.replace(/\s/g, '')}`,
     },
     {
       icon: Mail,
-      title: isArabic ? "بريد" : "Email",
+      title: isArabic ? "البريد" : "Email",
       details: [content.email],
       color: "bg-purple-500",
       href: `mailto:${content.email}`,
     },
     {
       icon: Clock,
-      title: isArabic ? "ساعات" : "Hours",
-      details: [isArabic ? content.workingHoursAr : content.workingHours, isArabic ? content.fridayHoursAr : content.fridayHours],
+      title: isArabic ? "الساعات" : "Hours",
+      details: [
+        isArabic ? content.workingHoursAr : content.workingHours, 
+        isArabic ? content.fridayHoursAr : content.fridayHours
+      ],
       color: "bg-orange-500",
     },
   ];
@@ -143,7 +148,7 @@ const Contact = () => {
     {
       icon: MessageCircle,
       title: "WhatsApp",
-      subtitle: isArabic ? "تواصل" : "Chat",
+      subtitle: isArabic ? "تواصل الآن" : "Chat now",
       href: `https://wa.me/${content.whatsappNumber.replace(/[^0-9]/g, '')}`,
       color: "bg-[#25D366]",
     },
@@ -279,9 +284,9 @@ const Contact = () => {
         </section>
 
         {/* Contact Info Cards - Responsive Grid */}
-        <section className="py-12 bg-background">
+        <section className="py-8 md:py-12 bg-background">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
               {contactInfo.map((info, idx) => (
                 <motion.div
                   key={info.title}
@@ -294,25 +299,29 @@ const Contact = () => {
                   {info.href ? (
                     <a
                       href={info.href}
-                      className="flex flex-col items-center text-center p-6 bg-card rounded-2xl border border-border hover:border-primary/30 hover:shadow-lg transition-all"
+                      className="flex flex-col items-center text-center p-4 md:p-6 bg-card rounded-2xl border border-border hover:border-primary/30 hover:shadow-lg transition-all h-full"
                     >
-                      <div className={`w-14 h-14 ${info.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                        <info.icon className="w-6 h-6 text-white" />
+                      <div className={`w-12 h-12 md:w-14 md:h-14 ${info.color} rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform`}>
+                        <info.icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
-                      <h3 className="font-bold text-foreground mb-2">{info.title}</h3>
-                      {info.details.map((detail, i) => (
-                        <p key={i} className="text-muted-foreground text-sm">{detail}</p>
-                      ))}
+                      <h3 className="font-bold text-foreground text-sm md:text-base mb-1 md:mb-2">{info.title}</h3>
+                      <div className="space-y-0.5">
+                        {info.details.map((detail, i) => (
+                          <p key={i} className="text-muted-foreground text-xs md:text-sm leading-tight break-words">{detail}</p>
+                        ))}
+                      </div>
                     </a>
                   ) : (
-                    <div className="flex flex-col items-center text-center p-6 bg-card rounded-2xl border border-border">
-                      <div className={`w-14 h-14 ${info.color} rounded-2xl flex items-center justify-center mb-4`}>
-                        <info.icon className="w-6 h-6 text-white" />
+                    <div className="flex flex-col items-center text-center p-4 md:p-6 bg-card rounded-2xl border border-border h-full">
+                      <div className={`w-12 h-12 md:w-14 md:h-14 ${info.color} rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4`}>
+                        <info.icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
-                      <h3 className="font-bold text-foreground mb-2">{info.title}</h3>
-                      {info.details.map((detail, i) => (
-                        <p key={i} className="text-muted-foreground text-sm">{detail}</p>
-                      ))}
+                      <h3 className="font-bold text-foreground text-sm md:text-base mb-1 md:mb-2">{info.title}</h3>
+                      <div className="space-y-0.5">
+                        {info.details.map((detail, i) => (
+                          <p key={i} className="text-muted-foreground text-xs md:text-sm leading-tight">{detail}</p>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -443,16 +452,16 @@ const Contact = () => {
                 viewport={{ once: true }}
               >
                 <div className="bg-card rounded-3xl shadow-xl overflow-hidden border border-border h-full min-h-[400px] lg:min-h-full">
-                  <div className="p-4 border-b border-border flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-primary" />
+                  <div className="p-3 md:p-4 border-b border-border flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                       </div>
-                      <div>
-                        <h3 className="font-bold text-foreground">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-foreground text-sm md:text-base">
                           {isArabic ? "موقعنا" : "Our Location"}
                         </h3>
-                        <p className="text-muted-foreground text-sm">
+                        <p className="text-muted-foreground text-xs md:text-sm truncate">
                           {isArabic ? content.addressAr : content.address}
                         </p>
                       </div>
@@ -461,9 +470,9 @@ const Contact = () => {
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(content.address + ', ' + content.addressLine2)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+                      className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-primary text-primary-foreground rounded-lg md:rounded-xl text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors flex-shrink-0"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       {isArabic ? "فتح" : "Open"}
                     </a>
                   </div>
