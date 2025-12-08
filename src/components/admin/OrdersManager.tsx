@@ -304,51 +304,83 @@ export const OrdersManager = () => {
   };
 
   const printInvoice = async (order: Order) => {
-    // Fetch branding settings for logo
-    let logoUrl = '';
-    let siteName = 'GREEN GRASS STORE';
+    // Fetch invoice template settings
+    let template = {
+      showLogo: true,
+      logoUrl: '',
+      companyName: 'GREEN GRASS STORE',
+      address: 'Dubai, UAE',
+      phone: '+971 54 775 1901',
+      email: 'info@greengrassstore.com',
+      website: 'www.greengrassstore.com',
+      primaryColor: '#2d5a3d',
+      footerText: 'Thank you for shopping with us!',
+      showTaxBreakdown: true,
+      taxLabel: 'VAT',
+      currencySymbol: 'AED',
+      invoiceTitle: 'INVOICE'
+    };
+
     try {
       const { data } = await supabase
         .from('site_settings')
         .select('setting_value')
-        .eq('setting_key', 'branding')
+        .eq('setting_key', 'invoice_template')
         .single();
       if (data?.setting_value) {
-        const branding = data.setting_value as any;
-        logoUrl = branding.logoUrl || '';
-        siteName = branding.siteName || 'GREEN GRASS STORE';
+        template = { ...template, ...data.setting_value as any };
       }
     } catch (e) {
-      console.log('Could not fetch branding');
+      // Use defaults
+    }
+
+    // Fallback to branding if no invoice template logo
+    if (!template.logoUrl) {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'branding')
+          .single();
+        if (data?.setting_value) {
+          const branding = data.setting_value as any;
+          template.logoUrl = branding.logoUrl || '';
+          if (!template.companyName || template.companyName === 'GREEN GRASS STORE') {
+            template.companyName = branding.siteName || 'GREEN GRASS STORE';
+          }
+        }
+      } catch (e) {
+        console.log('Could not fetch branding');
+      }
     }
 
     const invoiceWindow = window.open('', '_blank');
     if (!invoiceWindow) return;
 
-    const logoSection = logoUrl 
-      ? `<img src="${logoUrl}" alt="${siteName}" style="max-height: 60px; max-width: 200px; margin-bottom: 10px;" />`
-      : `<h1 style="color: #2d5a3d; margin: 0;">${siteName}</h1>`;
+    const logoSection = template.showLogo && template.logoUrl 
+      ? `<img src="${template.logoUrl}" alt="${template.companyName}" style="max-height: 60px; max-width: 200px; margin-bottom: 10px;" />`
+      : `<h1 style="color: ${template.primaryColor}; margin: 0;">${template.companyName}</h1>`;
 
     const invoiceHTML = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Invoice - ${order.order_number}</title>
+        <title>${template.invoiceTitle} - ${order.order_number}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2d5a3d; padding-bottom: 20px; }
-          .header h1 { color: #2d5a3d; margin: 0; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid ${template.primaryColor}; padding-bottom: 20px; }
+          .header h1 { color: ${template.primaryColor}; margin: 0; }
           .header p { color: #666; margin: 5px 0; }
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
           .info-box { background: #f9f9f9; padding: 15px; border-radius: 8px; }
-          .info-box h3 { margin: 0 0 10px 0; color: #2d5a3d; font-size: 14px; }
+          .info-box h3 { margin: 0 0 10px 0; color: ${template.primaryColor}; font-size: 14px; }
           .info-box p { margin: 3px 0; font-size: 13px; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
           th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-          th { background: #2d5a3d; color: white; }
+          th { background: ${template.primaryColor}; color: white; }
           .totals { text-align: right; }
           .totals p { margin: 5px 0; }
-          .total-row { font-size: 18px; font-weight: bold; color: #2d5a3d; }
+          .total-row { font-size: 18px; font-weight: bold; color: ${template.primaryColor}; }
           .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
           @media print { body { padding: 20px; } }
         </style>
@@ -356,9 +388,11 @@ export const OrdersManager = () => {
       <body>
         <div class="header">
           ${logoSection}
-          <p>www.greengrassstore.com</p>
-          <p>Dubai, UAE | +971 54 775 1901</p>
+          <p>${template.website}</p>
+          <p>${template.address} | ${template.phone}</p>
         </div>
+        
+        <h2 style="text-align: center; color: ${template.primaryColor};">${template.invoiceTitle}</h2>
         
         <div class="info-grid">
           <div class="info-box">
@@ -391,25 +425,25 @@ export const OrdersManager = () => {
               <tr>
                 <td>${item.name}</td>
                 <td>${item.quantity}</td>
-                <td>AED ${item.price.toFixed(2)}</td>
-                <td>AED ${(item.price * item.quantity).toFixed(2)}</td>
+                <td>${template.currencySymbol} ${item.price.toFixed(2)}</td>
+                <td>${template.currencySymbol} ${(item.price * item.quantity).toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
 
         <div class="totals">
-          <p>Subtotal: AED ${order.subtotal.toFixed(2)}</p>
-          <p>Tax: AED ${order.tax.toFixed(2)}</p>
-          <p>Shipping: AED ${order.shipping.toFixed(2)}</p>
-          <p class="total-row">Total: AED ${order.total.toFixed(2)}</p>
+          <p>Subtotal: ${template.currencySymbol} ${order.subtotal.toFixed(2)}</p>
+          ${template.showTaxBreakdown ? `<p>${template.taxLabel}: ${template.currencySymbol} ${order.tax.toFixed(2)}</p>` : ''}
+          <p>Shipping: ${template.currencySymbol} ${order.shipping.toFixed(2)}</p>
+          <p class="total-row">Total: ${template.currencySymbol} ${order.total.toFixed(2)}</p>
         </div>
 
         ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p>` : ''}
 
         <div class="footer">
-          <p>Thank you for shopping with Green Grass Store!</p>
-          <p>For any queries, contact us at info@greengrassstore.com</p>
+          <p>${template.footerText}</p>
+          <p>For any queries, contact us at ${template.email}</p>
         </div>
       </body>
       </html>
@@ -421,42 +455,72 @@ export const OrdersManager = () => {
   };
 
   const printDeliverySlip = async (order: Order) => {
-    // Fetch branding settings for logo
-    let logoUrl = '';
-    let siteName = 'GREEN GRASS STORE';
+    // Fetch invoice template settings
+    let template = {
+      showLogo: true,
+      logoUrl: '',
+      companyName: 'GREEN GRASS STORE',
+      address: 'Dubai, UAE',
+      phone: '+971 54 775 1901',
+      email: 'info@greengrassstore.com',
+      website: 'www.greengrassstore.com',
+      primaryColor: '#2d5a3d',
+      footerText: 'Thank you for shopping with us!',
+      currencySymbol: 'AED',
+      deliverySlipTitle: 'DELIVERY SLIP'
+    };
+
     try {
       const { data } = await supabase
         .from('site_settings')
         .select('setting_value')
-        .eq('setting_key', 'branding')
+        .eq('setting_key', 'invoice_template')
         .single();
       if (data?.setting_value) {
-        const branding = data.setting_value as any;
-        logoUrl = branding.logoUrl || '';
-        siteName = branding.siteName || 'GREEN GRASS STORE';
+        template = { ...template, ...data.setting_value as any };
       }
     } catch (e) {
-      console.log('Could not fetch branding');
+      // Use defaults
+    }
+
+    // Fallback to branding if no invoice template logo
+    if (!template.logoUrl) {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'branding')
+          .single();
+        if (data?.setting_value) {
+          const branding = data.setting_value as any;
+          template.logoUrl = branding.logoUrl || '';
+          if (!template.companyName || template.companyName === 'GREEN GRASS STORE') {
+            template.companyName = branding.siteName || 'GREEN GRASS STORE';
+          }
+        }
+      } catch (e) {
+        console.log('Could not fetch branding');
+      }
     }
 
     const slipWindow = window.open('', '_blank');
     if (!slipWindow) return;
 
-    const logoSection = logoUrl 
-      ? `<img src="${logoUrl}" alt="${siteName}" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;" />`
-      : `<p style="color: #666; margin: 5px 0; font-size: 12px;">${siteName}</p>`;
+    const logoSection = template.showLogo && template.logoUrl 
+      ? `<img src="${template.logoUrl}" alt="${template.companyName}" style="max-height: 50px; max-width: 150px; margin-bottom: 5px;" />`
+      : `<p style="color: #666; margin: 5px 0; font-size: 12px;">${template.companyName}</p>`;
 
     const slipHTML = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Delivery Slip - ${order.order_number}</title>
+        <title>${template.deliverySlipTitle} - ${order.order_number}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 30px; max-width: 600px; margin: 0 auto; }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2d5a3d; padding-bottom: 15px; }
-          .header h1 { color: #2d5a3d; margin: 0; font-size: 22px; }
+          .header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid ${template.primaryColor}; padding-bottom: 15px; }
+          .header h1 { color: ${template.primaryColor}; margin: 0; font-size: 22px; }
           .header p { color: #666; margin: 5px 0; font-size: 12px; }
-          .badge { display: inline-block; padding: 6px 15px; background: #2d5a3d; color: white; border-radius: 15px; font-size: 12px; margin-top: 10px; }
+          .badge { display: inline-block; padding: 6px 15px; background: ${template.primaryColor}; color: white; border-radius: 15px; font-size: 12px; margin-top: 10px; }
           .delivery-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
           .delivery-info h2 { margin: 0 0 15px 0; font-size: 16px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
           .delivery-info p { margin: 5px 0; font-size: 14px; }
@@ -464,7 +528,7 @@ export const OrdersManager = () => {
           .items-list h2 { font-size: 16px; margin: 0 0 15px 0; color: #333; }
           .item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #ddd; }
           .item:last-child { border-bottom: none; }
-          .checkbox { width: 20px; height: 20px; border: 2px solid #2d5a3d; border-radius: 3px; margin-right: 10px; }
+          .checkbox { width: 20px; height: 20px; border: 2px solid ${template.primaryColor}; border-radius: 3px; margin-right: 10px; }
           .signature-box { border: 2px dashed #ccc; padding: 40px; margin-top: 30px; text-align: center; }
           .signature-box p { color: #999; font-size: 12px; }
           .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #999; }
@@ -473,7 +537,7 @@ export const OrdersManager = () => {
       </head>
       <body>
         <div class="header">
-          <h1>🚚 DELIVERY SLIP</h1>
+          <h1>🚚 ${template.deliverySlipTitle}</h1>
           ${logoSection}
           <span class="badge">Order #${order.order_number}</span>
         </div>
@@ -500,8 +564,8 @@ export const OrdersManager = () => {
         </div>
 
         <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center;">
-          <p style="margin: 0; font-weight: bold; color: #2d5a3d;">
-            💰 Amount to Collect: AED ${order.total.toFixed(2)}
+          <p style="margin: 0; font-weight: bold; color: ${template.primaryColor};">
+            💰 Amount to Collect: ${template.currencySymbol} ${order.total.toFixed(2)}
           </p>
           <p style="margin: 5px 0 0; font-size: 12px; color: #666;">
             Payment: ${order.payment_method || 'Cash on Delivery'}
@@ -514,8 +578,8 @@ export const OrdersManager = () => {
         </div>
 
         <div class="footer">
-          <p>Thank you for choosing Green Grass Store!</p>
-          <p>+971 54 775 1901 | www.greengrassstore.com</p>
+          <p>${template.footerText}</p>
+          <p>${template.phone} | ${template.website}</p>
         </div>
       </body>
       </html>

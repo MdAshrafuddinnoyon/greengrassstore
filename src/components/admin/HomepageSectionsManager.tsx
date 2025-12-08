@@ -233,26 +233,26 @@ export const HomepageSectionsManager = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="hero" className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
-          <TabsTrigger value="hero" className="gap-2">
-            <ImageIcon className="w-4 h-4" />
-            <span className="hidden md:inline">Hero</span>
+        <TabsList className="flex flex-wrap h-auto gap-1 p-1 w-full">
+          <TabsTrigger value="hero" className="flex-1 min-w-[60px] gap-1 text-xs sm:text-sm py-2">
+            <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline sm:inline">Hero</span>
           </TabsTrigger>
-          <TabsTrigger value="featured" className="gap-2">
-            <Grid className="w-4 h-4" />
-            <span className="hidden md:inline">Categories</span>
+          <TabsTrigger value="featured" className="flex-1 min-w-[60px] gap-1 text-xs sm:text-sm py-2">
+            <Grid className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Categories</span>
           </TabsTrigger>
-          <TabsTrigger value="collection" className="gap-2">
-            <Package className="w-4 h-4" />
-            <span className="hidden md:inline">Collection</span>
+          <TabsTrigger value="collection" className="flex-1 min-w-[60px] gap-1 text-xs sm:text-sm py-2">
+            <Package className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Collection</span>
           </TabsTrigger>
-          <TabsTrigger value="gift" className="gap-2">
-            <Gift className="w-4 h-4" />
-            <span className="hidden md:inline">Gift</span>
+          <TabsTrigger value="gift" className="flex-1 min-w-[60px] gap-1 text-xs sm:text-sm py-2">
+            <Gift className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Gift</span>
           </TabsTrigger>
-          <TabsTrigger value="promo" className="gap-2">
-            <Tag className="w-4 h-4" />
-            <span className="hidden md:inline">Promo</span>
+          <TabsTrigger value="promo" className="flex-1 min-w-[60px] gap-1 text-xs sm:text-sm py-2">
+            <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Promo</span>
           </TabsTrigger>
         </TabsList>
 

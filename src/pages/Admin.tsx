@@ -39,6 +39,7 @@ import { FooterMenuManager } from "@/components/admin/FooterMenuManager";
 import { SMTPSettingsManager } from "@/components/admin/SMTPSettingsManager";
 import { SocialIntegrationManager } from "@/components/admin/SocialIntegrationManager";
 import { BrandingManager } from "@/components/admin/BrandingManager";
+import { InvoiceTemplateManager } from "@/components/admin/InvoiceTemplateManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -145,6 +146,7 @@ const Admin = () => {
               <TabsTrigger value="general" className="text-xs sm:text-sm">General</TabsTrigger>
               <TabsTrigger value="users" className="text-xs sm:text-sm">Users & Roles</TabsTrigger>
               <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
+              <TabsTrigger value="invoice" className="text-xs sm:text-sm">Invoice</TabsTrigger>
               <TabsTrigger value="tracking" className="text-xs sm:text-sm">Tracking</TabsTrigger>
               <TabsTrigger value="api" className="text-xs sm:text-sm">API & Security</TabsTrigger>
               <TabsTrigger value="smtp" className="text-xs sm:text-sm">SMTP / Email</TabsTrigger>
@@ -161,6 +163,10 @@ const Admin = () => {
             
             <TabsContent value="payments" className="m-0">
               <PaymentSettingsManager />
+            </TabsContent>
+            
+            <TabsContent value="invoice" className="m-0">
+              <InvoiceTemplateManager />
             </TabsContent>
             
             <TabsContent value="tracking" className="m-0">
