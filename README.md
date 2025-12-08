@@ -58,4 +58,4 @@ For development inquiries:
 
 ---
 
-© 2024 Green Grass Store. Developed by Web Search BD.
+© 2025 Green Grass Store. Developed by Web Search BD.
