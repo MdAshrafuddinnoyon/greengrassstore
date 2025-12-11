@@ -3,8 +3,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { Leaf, Heart, Globe2, Award } from "lucide-react";
-import gardenFlowers from "@/assets/garden-flowers.jpg";
 import womanPlant from "@/assets/woman-plant.jpg";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const About = () => {
   return (
@@ -16,7 +16,7 @@ const About = () => {
         <div className="relative h-[50vh] md:h-[60vh] min-h-[350px]">
           <div className="absolute inset-0">
             <img
-              src={gardenFlowers}
+              src={heroBg}
               alt="Green Grass Store"
               className="w-full h-full object-cover"
             />

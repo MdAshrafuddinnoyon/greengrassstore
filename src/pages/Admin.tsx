@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, LayoutDashboard, Settings } from "lucide-react";
@@ -222,9 +220,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <Header />
-      
-      <div className="flex min-h-[calc(100vh-80px)]">
+      <div className="flex min-h-screen">
         {/* Sidebar */}
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         
@@ -255,8 +251,6 @@ const Admin = () => {
           </div>
         </main>
       </div>
-      
-      <Footer />
     </div>
   );
 };

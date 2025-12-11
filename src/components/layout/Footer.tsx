@@ -228,6 +228,8 @@ export const Footer = () => {
                   <li><Link to="/faq" className="hover:text-white transition-colors">{isArabic ? "الأسئلة الشائعة" : "FAQ"}</Link></li>
                   <li><Link to="/track-order" className="hover:text-white transition-colors">{isArabic ? "تتبع الطلب" : "Track Order"}</Link></li>
                   <li><Link to="/returns" className="hover:text-white transition-colors">{t("footer.returnPolicy")}</Link></li>
+                  <li><Link to="/privacy-policy" className="hover:text-white transition-colors">{isArabic ? "سياسة الخصوصية" : "Privacy Policy"}</Link></li>
+                  <li><Link to="/terms-of-service" className="hover:text-white transition-colors">{isArabic ? "الشروط والأحكام" : "Terms of Service"}</Link></li>
                 </ul>
               </div>
 
