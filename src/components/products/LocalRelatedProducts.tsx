@@ -38,15 +38,30 @@ export const LocalRelatedProducts = ({ currentProductId, category }: LocalRelate
     const loadRelatedProducts = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        // First try to get products from the same category
+        let { data, error } = await supabase
           .from('products')
           .select('*')
           .eq('is_active', true)
-          .eq('category', category)
+          .ilike('category', category)
           .neq('id', currentProductId)
           .limit(4);
 
         if (error) throw error;
+
+        // If no products found in same category, get random products
+        if (!data || data.length === 0) {
+          const { data: randomData, error: randomError } = await supabase
+            .from('products')
+            .select('*')
+            .eq('is_active', true)
+            .neq('id', currentProductId)
+            .limit(4);
+          
+          if (randomError) throw randomError;
+          data = randomData;
+        }
+
         setProducts(data || []);
       } catch (error) {
         console.error("Error loading related products:", error);
@@ -55,7 +70,9 @@ export const LocalRelatedProducts = ({ currentProductId, category }: LocalRelate
       }
     };
 
-    loadRelatedProducts();
+    if (currentProductId) {
+      loadRelatedProducts();
+    }
   }, [currentProductId, category]);
 
   if (loading) {
