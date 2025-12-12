@@ -37,6 +37,7 @@ export const MediaLibrary = () => {
   const [folders, setFolders] = useState<string[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
   const [uploadFolder, setUploadFolder] = useState("uploads");
+  const [isDragging, setIsDragging] = useState(false);
 
   // Predefined folders for organization
   const predefinedFolders = ['uploads', 'products', 'blog', 'categories', 'banners', 'logos'];
@@ -77,10 +78,31 @@ export const MediaLibrary = () => {
     fetchFiles();
   }, [fetchFiles]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadFiles = e.target.files;
-    if (!uploadFiles || uploadFiles.length === 0) return;
+  // Drag and Drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+      await processFileUpload(droppedFiles);
+    }
+  };
+
+  const processFileUpload = async (uploadFiles: FileList) => {
     setUploading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -125,6 +147,12 @@ export const MediaLibrary = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadFiles = e.target.files;
+    if (!uploadFiles || uploadFiles.length === 0) return;
+    await processFileUpload(uploadFiles);
   };
 
   const handleDelete = async (file: MediaFile) => {
@@ -178,6 +206,44 @@ export const MediaLibrary = () => {
 
   return (
     <div className="space-y-6">
+      {/* Drag and Drop Upload Area */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
+          isDragging 
+            ? 'border-primary bg-primary/10' 
+            : 'border-border hover:border-primary/50 hover:bg-muted/30'
+        }`}
+      >
+        <Upload className={`w-10 h-10 mx-auto mb-3 ${isDragging ? 'text-primary' : 'text-muted-foreground'}`} />
+        <p className="font-medium mb-1">
+          {isDragging ? 'Drop files here' : 'Drag & Drop files here'}
+        </p>
+        <p className="text-sm text-muted-foreground mb-3">
+          or click to select files
+        </p>
+        <label>
+          <Button size="sm" disabled={uploading} asChild>
+            <span className="cursor-pointer">
+              {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+              Select Files
+            </span>
+          </Button>
+          <input
+            type="file"
+            className="hidden"
+            multiple
+            accept="image/*,application/pdf,.csv,.xml"
+            onChange={handleFileUpload}
+          />
+        </label>
+        <p className="text-xs text-muted-foreground mt-3">
+          Supported: Images, PDF, CSV, XML (Max 50MB)
+        </p>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
@@ -210,22 +276,6 @@ export const MediaLibrary = () => {
               <option key={folder} value={folder}>📁 {folder}</option>
             ))}
           </select>
-          
-          <label>
-            <Button size="sm" disabled={uploading} asChild>
-              <span className="cursor-pointer">
-                {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                Upload to {uploadFolder}
-              </span>
-            </Button>
-            <input
-              type="file"
-              className="hidden"
-              multiple
-              accept="image/*,application/pdf,.csv,.xml"
-              onChange={handleFileUpload}
-            />
-          </label>
         </div>
       </div>
 
