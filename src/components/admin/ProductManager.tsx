@@ -876,22 +876,42 @@ export const ProductManager = () => {
             </TabsContent>
 
             <TabsContent value="pricing" className="space-y-4 mt-4">
-              <div className="grid grid-cols-3 gap-4">
+              {/* Discount Info Box */}
+              {editingProduct?.compare_at_price && editingProduct.compare_at_price > (editingProduct?.price || 0) && (
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <Badge className="bg-red-500 text-white">
+                      {Math.round((1 - (editingProduct?.price || 0) / editingProduct.compare_at_price) * 100)}% OFF
+                    </Badge>
+                    <span className="text-sm font-medium">
+                      Customer saves {editingProduct.currency || 'AED'} {(editingProduct.compare_at_price - (editingProduct?.price || 0)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Price *</Label>
+                  <Label>Sale Price (Current Price) *</Label>
                   <Input
                     type="number"
                     value={editingProduct?.price || 0}
                     onChange={(e) => setEditingProduct(p => ({ ...p, price: parseFloat(e.target.value) || 0 }))}
+                    placeholder="e.g., 99"
                   />
+                  <p className="text-xs text-muted-foreground">The price customer pays</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Compare at Price</Label>
+                  <Label>Original Price (Compare at)</Label>
                   <Input
                     type="number"
                     value={editingProduct?.compare_at_price || ''}
                     onChange={(e) => setEditingProduct(p => ({ ...p, compare_at_price: parseFloat(e.target.value) || undefined }))}
+                    placeholder="e.g., 149 (higher than sale price)"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Set higher than sale price to show discount. Leave empty if no discount.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Stock Quantity</Label>
@@ -899,7 +919,45 @@ export const ProductManager = () => {
                     type="number"
                     value={editingProduct?.stock_quantity || 0}
                     onChange={(e) => setEditingProduct(p => ({ ...p, stock_quantity: parseInt(e.target.value) || 0 }))}
+                    placeholder="e.g., 50"
                   />
+                  <p className="text-xs text-muted-foreground">Available inventory</p>
+                </div>
+              </div>
+
+              {/* Quick Discount Calculator */}
+              <div className="p-4 border rounded-lg bg-muted/30">
+                <Label className="mb-2 block">Quick Discount Calculator</Label>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-sm text-muted-foreground">Apply discount:</span>
+                  {[10, 15, 20, 25, 30, 40, 50].map((pct) => (
+                    <Button
+                      key={pct}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const currentPrice = editingProduct?.price || 0;
+                        if (currentPrice > 0) {
+                          const originalPrice = Math.round(currentPrice / (1 - pct / 100));
+                          setEditingProduct(p => ({ ...p, compare_at_price: originalPrice, is_on_sale: true }));
+                          toast.success(`${pct}% discount applied`);
+                        } else {
+                          toast.error('Set sale price first');
+                        }
+                      }}
+                    >
+                      {pct}%
+                    </Button>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingProduct(p => ({ ...p, compare_at_price: undefined, is_on_sale: false }))}
+                  >
+                    Clear
+                  </Button>
                 </div>
               </div>
             </TabsContent>
