@@ -18,7 +18,7 @@ export const RelatedProducts = ({ currentProductId, productType, tags }: Related
       setLoading(true);
       try {
         // Try to fetch by product type first
-        let query = productType ? `product_type:${productType}` : undefined;
+        const query = productType ? `product_type:${productType}` : undefined;
         const data = await fetchProducts(8, query);
         
         // Filter out current product
