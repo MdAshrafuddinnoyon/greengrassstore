@@ -6,13 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { useCompareStore } from "@/stores/compareStore";
 import { X, ChevronUp, ChevronDown, GitCompare, Trash2, Check, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export const LocalCompareDrawer = () => {
   const { items, removeItem, clearAll, isOpen, toggleCompareDrawer } = useCompareStore();
   const [minimized, setMinimized] = useState(false);
+  const location = useLocation();
 
-  if (items.length === 0) return null;
+  // Hide on admin pages
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  if (isAdminRoute || items.length === 0) return null;
 
   const getProductData = (item: typeof items[0]) => ({
     id: item.node.id,

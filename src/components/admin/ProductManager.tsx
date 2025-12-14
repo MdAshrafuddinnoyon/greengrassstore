@@ -838,6 +838,60 @@ export const ProductManager = () => {
                   />
                   <Label>On Sale</Label>
                 </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editingProduct?.category?.toLowerCase().includes('gift') || editingProduct?.subcategory?.toLowerCase().includes('gift') || false}
+                    onCheckedChange={(v) => {
+                      if (v) {
+                        // Add "gift" to category or subcategory
+                        setEditingProduct(p => ({ ...p, subcategory: 'gift' }));
+                      } else {
+                        // Remove gift from subcategory if it was gift
+                        setEditingProduct(p => ({ 
+                          ...p, 
+                          subcategory: p?.subcategory?.toLowerCase() === 'gift' ? '' : p?.subcategory 
+                        }));
+                      }
+                    }}
+                  />
+                  <Label className="text-amber-600 font-medium">🎁 Gift Item</Label>
+                </div>
+              </div>
+
+              {/* Tags for multiple categorization */}
+              <div className="space-y-2">
+                <Label>Tags (for multiple categorization)</Label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {(editingProduct?.tags || []).map((tag, i) => (
+                    <Badge key={i} variant="secondary" className="flex items-center gap-1">
+                      {tag}
+                      <X 
+                        className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                        onClick={() => {
+                          const newTags = [...(editingProduct?.tags || [])];
+                          newTags.splice(i, 1);
+                          setEditingProduct(p => ({ ...p, tags: newTags }));
+                        }}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add tag (e.g., plants, pots, gift)"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const value = (e.target as HTMLInputElement).value.trim();
+                        if (value && !(editingProduct?.tags || []).includes(value)) {
+                          setEditingProduct(p => ({ ...p, tags: [...(p?.tags || []), value] }));
+                          (e.target as HTMLInputElement).value = '';
+                        }
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Press Enter to add. Use tags to show product in multiple categories.</p>
               </div>
             </TabsContent>
 

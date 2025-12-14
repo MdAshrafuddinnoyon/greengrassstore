@@ -362,14 +362,14 @@ export const HomepageSectionsManager = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Button Text (EN)</Label>
+                  <Label>Primary Button Text (EN)</Label>
                   <Input
                     value={heroSettings.buttonText}
                     onChange={(e) => setHeroSettings(prev => ({ ...prev, buttonText: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Button Text (AR)</Label>
+                  <Label>Primary Button Text (AR)</Label>
                   <Input
                     value={heroSettings.buttonTextAr}
                     onChange={(e) => setHeroSettings(prev => ({ ...prev, buttonTextAr: e.target.value }))}
@@ -377,10 +377,38 @@ export const HomepageSectionsManager = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Button Link</Label>
+                  <Label>Primary Button Link</Label>
                   <Input
                     value={heroSettings.buttonLink}
                     onChange={(e) => setHeroSettings(prev => ({ ...prev, buttonLink: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Secondary Button Text (EN)</Label>
+                  <Input
+                    value={heroSettings.secondaryButtonText || ''}
+                    onChange={(e) => setHeroSettings(prev => ({ ...prev, secondaryButtonText: e.target.value }))}
+                    placeholder="e.g., View Sale"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Secondary Button Text (AR)</Label>
+                  <Input
+                    value={heroSettings.secondaryButtonTextAr || ''}
+                    onChange={(e) => setHeroSettings(prev => ({ ...prev, secondaryButtonTextAr: e.target.value }))}
+                    dir="rtl"
+                    placeholder="عرض التخفيضات"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Secondary Button Link</Label>
+                  <Input
+                    value={heroSettings.secondaryButtonLink || ''}
+                    onChange={(e) => setHeroSettings(prev => ({ ...prev, secondaryButtonLink: e.target.value }))}
+                    placeholder="/shop?collection=sale"
                   />
                 </div>
               </div>
