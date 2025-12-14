@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, MessageSquare, FileText, Send, Bot, User as UserIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
@@ -12,12 +13,16 @@ const WHATSAPP_URL = "https://wa.me/+971547751901";
 export const FloatingActionMenu = () => {
   const { language } = useLanguage();
   const isArabic = language === "ar";
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [showCustomRequest, setShowCustomRequest] = useState(false);
   const [showWhatsAppChat, setShowWhatsAppChat] = useState(false);
   const [showSalesAgent, setShowSalesAgent] = useState(false);
   const [whatsAppMessage, setWhatsAppMessage] = useState("");
+
+  // Hide on admin page
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -30,6 +35,11 @@ export const FloatingActionMenu = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Don't render on admin pages
+  if (isAdminRoute) {
+    return null;
+  }
 
   const handleWhatsApp = () => {
     setIsOpen(false);

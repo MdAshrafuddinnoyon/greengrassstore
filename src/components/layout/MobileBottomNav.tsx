@@ -12,6 +12,10 @@ export const MobileBottomNav = () => {
   const items = useCartStore((state) => state.items);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
+  // Hide on admin pages
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  if (isAdminRoute) return null;
+
   const navItems = [
     { icon: Home, label: t("common.home"), href: "/" },
     { icon: Grid3X3, label: t("common.categories"), href: "/shop", isCategories: true },

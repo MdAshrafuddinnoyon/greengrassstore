@@ -1,16 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { ArrowUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [showButton, setShowButton] = useState(false);
 
-  // Scroll to top on route change
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+  // Scroll to top on route change - use useLayoutEffect for immediate execution
+  useLayoutEffect(() => {
+    // Force scroll to top immediately
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [pathname, search]);
 
   // Show/hide scroll to top button based on scroll position
   useEffect(() => {

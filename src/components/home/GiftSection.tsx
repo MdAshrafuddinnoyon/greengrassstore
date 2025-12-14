@@ -29,7 +29,7 @@ export const GiftSection = () => {
         const { data, error } = await supabase
           .from('products')
           .select('id, name, name_ar, price, featured_image, slug')
-          .or('category.ilike.%gift%,subcategory.ilike.%gift%')
+          .or('category.ilike.%gift%,subcategory.ilike.%gift%,tags.cs.{gift}')
           .eq('is_active', true)
           .limit(6);
         
@@ -43,6 +43,22 @@ export const GiftSection = () => {
     };
 
     fetchGiftProducts();
+
+    // Real-time subscription for product updates
+    const channel = supabase
+      .channel('gift-products-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        () => {
+          fetchGiftProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (!giftSection.enabled && !loading) return null;
