@@ -41,18 +41,112 @@ const Checkout = () => {
     city: "",
     notes: "",
   });
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount_type: string;
+    discount_value: number;
+    id: string;
+  } | null>(null);
+
+  // Privacy policy checkbox
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
   
+  // Calculate coupon discount
+  const couponDiscount = appliedCoupon 
+    ? appliedCoupon.discount_type === 'percentage'
+      ? (subtotal * appliedCoupon.discount_value / 100)
+      : appliedCoupon.discount_value
+    : 0;
+  
+  const subtotalAfterCoupon = subtotal - couponDiscount;
+  
   // Dynamic shipping calculation based on admin settings
   const freeShippingThreshold = shippingSettings.freeShippingThreshold;
   const shippingCost = shippingSettings.shippingCost;
-  const shipping = shippingSettings.freeShippingEnabled && subtotal >= freeShippingThreshold ? 0 : shippingCost;
-  const amountForFreeShipping = freeShippingThreshold - subtotal;
+  const shipping = shippingSettings.freeShippingEnabled && subtotalAfterCoupon >= freeShippingThreshold ? 0 : shippingCost;
+  const amountForFreeShipping = freeShippingThreshold - subtotalAfterCoupon;
   
-  const total = subtotal + shipping;
+  const total = subtotalAfterCoupon + shipping;
   const currency = items[0]?.price.currencyCode || "AED";
+
+  // Apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error(isArabic ? "يرجى إدخال كود الخصم" : "Please enter a coupon code");
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase
+        .from('discount_coupons')
+        .select('*')
+        .eq('code', couponCode.trim().toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        toast.error(isArabic ? "كود الخصم غير صالح" : "Invalid coupon code");
+        return;
+      }
+
+      // Check if expired
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        toast.error(isArabic ? "كود الخصم منتهي الصلاحية" : "Coupon has expired");
+        return;
+      }
+
+      // Check minimum order
+      if (data.min_order_amount && subtotal < data.min_order_amount) {
+        toast.error(
+          isArabic 
+            ? `الحد الأدنى للطلب ${data.min_order_amount} درهم` 
+            : `Minimum order amount is AED ${data.min_order_amount}`
+        );
+        return;
+      }
+
+      // Check max uses
+      if (data.max_uses && data.used_count >= data.max_uses) {
+        toast.error(isArabic ? "تم استخدام كود الخصم بالكامل" : "Coupon usage limit reached");
+        return;
+      }
+
+      setAppliedCoupon({
+        code: data.code,
+        discount_type: data.discount_type,
+        discount_value: Number(data.discount_value),
+        id: data.id
+      });
+
+      toast.success(
+        isArabic 
+          ? `تم تطبيق الخصم: ${data.discount_type === 'percentage' ? `${data.discount_value}%` : `${data.discount_value} درهم`}` 
+          : `Discount applied: ${data.discount_type === 'percentage' ? `${data.discount_value}%` : `AED ${data.discount_value}`}`
+      );
+    } catch (error) {
+      console.error('Coupon error:', error);
+      toast.error(isArabic ? "حدث خطأ" : "An error occurred");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // Remove coupon
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast.success(isArabic ? "تم إزالة كود الخصم" : "Coupon removed");
+  };
 
   const handleShopifyCheckout = async () => {
     try {
@@ -417,6 +511,47 @@ Please confirm my order. Thank you!`;
                   {isArabic ? "ملخص الطلب" : "Order Summary"}
                 </h2>
                 
+                {/* Coupon Code Input */}
+                <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2 block">
+                    {isArabic ? "كود الخصم" : "Coupon Code"}
+                  </label>
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg">
+                      <div>
+                        <span className="text-sm font-medium text-green-700">{appliedCoupon.code}</span>
+                        <span className="text-xs text-green-600 ml-2">
+                          ({appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : `${currency} ${appliedCoupon.discount_value}`})
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="text-red-500 hover:text-red-700 text-xs font-medium"
+                      >
+                        {isArabic ? "إزالة" : "Remove"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder={isArabic ? "أدخل كود الخصم" : "Enter coupon code"}
+                        className="flex-1 text-sm uppercase"
+                      />
+                      <Button
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading}
+                        variant="outline"
+                        size="sm"
+                        className="px-4"
+                      >
+                        {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isArabic ? "تطبيق" : "Apply")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
                 <div className="space-y-2 sm:space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500 text-xs sm:text-sm">
@@ -424,6 +559,14 @@ Please confirm my order. Thank you!`;
                     </span>
                     <span className="font-medium text-xs sm:text-sm">{currency} {subtotal.toFixed(2)}</span>
                   </div>
+                  {appliedCoupon && couponDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="text-xs sm:text-sm">
+                        {isArabic ? "خصم الكوبون" : "Coupon Discount"}
+                      </span>
+                      <span className="font-medium text-xs sm:text-sm">-{currency} {couponDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-500 text-xs sm:text-sm">
                       {isArabic ? "الشحن" : "Shipping"}
@@ -540,6 +683,42 @@ Please confirm my order. Thank you!`;
                     </div>
                   </label>
 
+                  {/* Privacy Policy Checkbox */}
+                  <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="accept-terms"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="accept-terms" className="text-xs sm:text-sm text-gray-600">
+                      {isArabic ? (
+                        <>
+                          أوافق على{" "}
+                          <Link to="/privacy-policy" className="text-primary hover:underline">
+                            سياسة الخصوصية
+                          </Link>
+                          {" "}و{" "}
+                          <Link to="/terms-of-service" className="text-primary hover:underline">
+                            الشروط والأحكام
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          I agree to the{" "}
+                          <Link to="/privacy-policy" className="text-primary hover:underline">
+                            Privacy Policy
+                          </Link>
+                          {" "}and{" "}
+                          <Link to="/terms-of-service" className="text-primary hover:underline">
+                            Terms of Service
+                          </Link>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
                   {/* Place Order Button */}
                   <Button
                     onClick={
@@ -547,14 +726,14 @@ Please confirm my order. Thank you!`;
                       paymentMethod === "home_delivery" ? handleHomeDeliveryOrder :
                       handleWhatsAppOrder
                     }
-                    disabled={isLoading}
+                    disabled={isLoading || !acceptedTerms}
                     className={`w-full h-11 sm:h-14 text-sm sm:text-lg font-semibold ${
                       paymentMethod === "whatsapp" 
                         ? "bg-[#25D366] hover:bg-[#128C7E] text-white"
                         : paymentMethod === "home_delivery"
                         ? "bg-amber-500 hover:bg-amber-600 text-white"
                         : "bg-[#2d5a3d] hover:bg-[#234830] text-white"
-                    }`}
+                    } disabled:opacity-50`}
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
@@ -577,6 +756,12 @@ Please confirm my order. Thank you!`;
                       </>
                     )}
                   </Button>
+
+                  {!acceptedTerms && (
+                    <p className="text-xs text-amber-600 text-center">
+                      {isArabic ? "يجب الموافقة على الشروط والأحكام للمتابعة" : "Please accept the terms and conditions to proceed"}
+                    </p>
+                  )}
                 </div>
 
                 {/* Trust Badges */}

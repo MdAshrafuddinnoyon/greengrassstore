@@ -26,15 +26,24 @@ export const GiftSection = () => {
   useEffect(() => {
     const fetchGiftProducts = async () => {
       try {
+        // Fetch products that have 'gift' tag, 'gift' in category/subcategory, or is_gift flag
         const { data, error } = await supabase
           .from('products')
-          .select('id, name, name_ar, price, featured_image, slug')
-          .or('category.ilike.%gift%,subcategory.ilike.%gift%')
+          .select('id, name, name_ar, price, featured_image, slug, category, subcategory, tags')
           .eq('is_active', true)
-          .limit(6);
+          .limit(20);
         
         if (error) throw error;
-        setGiftProducts(data || []);
+        
+        // Filter products that match gift criteria
+        const giftProducts = (data || []).filter(product => {
+          const categoryMatch = product.category?.toLowerCase().includes('gift');
+          const subcategoryMatch = product.subcategory?.toLowerCase().includes('gift');
+          const tagsMatch = product.tags?.some((tag: string) => tag.toLowerCase().includes('gift'));
+          return categoryMatch || subcategoryMatch || tagsMatch;
+        }).slice(0, 6);
+        
+        setGiftProducts(giftProducts);
       } catch (error) {
         console.error('Error fetching gift products:', error);
       } finally {
@@ -43,6 +52,22 @@ export const GiftSection = () => {
     };
 
     fetchGiftProducts();
+
+    // Real-time subscription for product updates
+    const channel = supabase
+      .channel('gift-products-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        () => {
+          fetchGiftProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (!giftSection.enabled && !loading) return null;
