@@ -294,7 +294,7 @@ Please confirm my order. Thank you!`;
 
       toast.success(isArabic ? "تم تأكيد طلبك! رقم الطلب: " + orderNumber : "Order confirmed! Order #: " + orderNumber);
       clearCart();
-      navigate('/track-order?order=' + orderNumber);
+      navigate('/thank-you?order=' + orderNumber);
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error(isArabic ? "حدث خطأ في إنشاء الطلب" : "Error creating order");
