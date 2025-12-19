@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Shield, User, RefreshCw, Pencil, Trash2, Ban, Plus, ShieldX } from "lucide-react";
+import { Loader2, Shield, User, RefreshCw, Pencil, Trash2, Ban, Plus, ShieldX, Key, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "./ExportButtons";
 import { toast } from "sonner";
@@ -47,6 +47,16 @@ export const UsersManager = () => {
   // Blocked IPs state (stored in site_settings)
   const [blockedIPs, setBlockedIPs] = useState<BlockedIP[]>([]);
   const [newIP, setNewIP] = useState({ ip: "", reason: "" });
+
+  // Password reset state
+  const [passwordResetUser, setPasswordResetUser] = useState<UserWithRole | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
+
+  // User emails from auth
+  const [userEmails, setUserEmails] = useState<Record<string, string>>({});
 
   const fetchUsers = async () => {
     try {
@@ -96,9 +106,93 @@ export const UsersManager = () => {
     }
   };
 
+  const fetchUserEmails = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await supabase.functions.invoke('admin-user-management', {
+        body: { action: 'list_users' }
+      });
+
+      if (response.data?.users) {
+        const emailMap: Record<string, string> = {};
+        response.data.users.forEach((u: { id: string; email: string }) => {
+          emailMap[u.id] = u.email;
+        });
+        setUserEmails(emailMap);
+      }
+    } catch (error) {
+      console.error("Error fetching user emails:", error);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!passwordResetUser) return;
+    
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const response = await supabase.functions.invoke('admin-user-management', {
+        body: {
+          action: 'update_password',
+          userId: passwordResetUser.user_id,
+          password: newPassword
+        }
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
+
+      toast.success("Password updated successfully");
+      setShowPasswordResetDialog(false);
+      setPasswordResetUser(null);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("Error resetting password:", error);
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleDeleteUserViaAdmin = async (userId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this user? This action cannot be undone.")) return;
+
+    try {
+      const response = await supabase.functions.invoke('admin-user-management', {
+        body: {
+          action: 'delete_user',
+          userId: userId
+        }
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      if (response.data?.error) throw new Error(response.data.error);
+
+      toast.success("User deleted successfully");
+      fetchUsers();
+      fetchUserEmails();
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast.error(error.message || "Failed to delete user");
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchBlockedIPs();
+    fetchUserEmails();
 
     // Real-time subscription for users and roles
     const channel = supabase
@@ -553,6 +647,7 @@ export const UsersManager = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>User</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Location</TableHead>
                       <TableHead>Joined</TableHead>
@@ -571,6 +666,9 @@ export const UsersManager = () => {
                             <span className="font-medium">{user.full_name || "Unknown User"}</span>
                           </div>
                         </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {userEmails[user.user_id] || "-"}
+                        </TableCell>
                         <TableCell className="text-muted-foreground">{user.phone || "-"}</TableCell>
                         <TableCell className="text-muted-foreground">{user.city || "-"}</TableCell>
                         <TableCell className="text-muted-foreground">{formatDate(user.created_at)}</TableCell>
@@ -583,7 +681,7 @@ export const UsersManager = () => {
                               value={user.role || "user"}
                               onValueChange={(value) => updateUserRole(user.user_id, value)}
                             >
-                              <SelectTrigger className="w-32 h-8 text-xs">
+                              <SelectTrigger className="w-28 h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -596,6 +694,20 @@ export const UsersManager = () => {
                             <Button
                               variant="ghost"
                               size="icon"
+                              title="Reset Password"
+                              onClick={() => {
+                                setPasswordResetUser(user);
+                                setNewPassword("");
+                                setConfirmPassword("");
+                                setShowPasswordResetDialog(true);
+                              }}
+                            >
+                              <Key className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Edit Profile"
                               onClick={() => {
                                 setEditingUser(user);
                                 setIsDialogOpen(true);
@@ -607,7 +719,8 @@ export const UsersManager = () => {
                               variant="ghost"
                               size="icon"
                               className="text-destructive"
-                              onClick={() => deleteUser(user.user_id)}
+                              title="Delete User"
+                              onClick={() => handleDeleteUserViaAdmin(user.user_id)}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -757,6 +870,63 @@ export const UsersManager = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={showPasswordResetDialog} onOpenChange={setShowPasswordResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" />
+              Reset Password
+            </DialogTitle>
+            <DialogDescription>
+              Set a new password for {passwordResetUser?.full_name || 'this user'}
+              {userEmails[passwordResetUser?.user_id || ''] && (
+                <span className="block text-sm mt-1">
+                  Email: {userEmails[passwordResetUser?.user_id || '']}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Minimum 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+            {newPassword && confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-sm text-destructive">Passwords do not match</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPasswordResetDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handlePasswordReset} 
+              disabled={resetLoading || !newPassword || newPassword !== confirmPassword}
+            >
+              {resetLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Reset Password
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
