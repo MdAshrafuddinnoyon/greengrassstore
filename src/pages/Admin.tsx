@@ -6,10 +6,7 @@ import { Loader2, LayoutDashboard, Settings } from "lucide-react";
 import { useAdminStore } from "@/stores/adminStore";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-<<<<<<< HEAD
 import { useRolePermissions } from "@/hooks/useRolePermissions";
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 import { cn } from "@/lib/utils";
 
 // Admin Dashboard Components
@@ -33,11 +30,7 @@ import { CustomerManager } from "@/components/admin/CustomerManager";
 import { HeroSliderManager } from "@/components/admin/HeroSliderManager";
 import { PopupManager } from "@/components/admin/PopupManager";
 import { CouponManager } from "@/components/admin/CouponManager";
-<<<<<<< HEAD
 import PaymentSettingsManager from "@/components/admin/PaymentSettingsManager";
-=======
-import { PaymentSettingsManager } from "@/components/admin/PaymentSettingsManager";
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 import { TrackingPixelManager } from "@/components/admin/TrackingPixelManager";
 import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
 import { EmailTemplateManager } from "@/components/admin/EmailTemplateManager";
@@ -47,19 +40,12 @@ import { SocialIntegrationManager } from "@/components/admin/SocialIntegrationMa
 import { BrandingManager } from "@/components/admin/BrandingManager";
 import { InvoiceTemplateManager } from "@/components/admin/InvoiceTemplateManager";
 import { VIPManager } from "@/components/admin/VIPManager";
-<<<<<<< HEAD
 import { FAQManager } from "@/components/admin/FAQManager";
 
 const Admin = () => {
   const navigate = useNavigate();
   const { isAdmin, isLoading, checkRole } = useAdminStore();
   const { permissions, role, isStaff, loading: permissionsLoading } = useRolePermissions();
-=======
-
-const Admin = () => {
-  const navigate = useNavigate();
-  const { isAdmin, isLoading, checkRole, canAccessAdmin } = useAdminStore();
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
@@ -85,7 +71,6 @@ const Admin = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-<<<<<<< HEAD
   // Redirect if not staff (admin/store_manager/moderator)
   useEffect(() => {
     if (!isLoading && !permissionsLoading && isAuthenticated && !isStaff) {
@@ -94,16 +79,6 @@ const Admin = () => {
   }, [isLoading, permissionsLoading, isAuthenticated, isStaff, navigate]);
 
   if (authLoading || isLoading || permissionsLoading) {
-=======
-  // Redirect if cannot access admin (not admin, moderator, or store_manager)
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && !canAccessAdmin()) {
-      navigate("/");
-    }
-  }, [isLoading, isAuthenticated, canAccessAdmin, navigate]);
-
-  if (authLoading || isLoading) {
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -114,11 +89,7 @@ const Admin = () => {
     );
   }
 
-<<<<<<< HEAD
   if (!isStaff) {
-=======
-  if (!canAccessAdmin()) {
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     return null;
   }
 
@@ -160,11 +131,8 @@ const Admin = () => {
         return <MegaMenuManager />;
       case "pages":
         return <PagesContentManager />;
-<<<<<<< HEAD
       case "faq":
         return <FAQManager />;
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       case "content":
         return <BrandingManager />;
       case "footer":
@@ -244,10 +212,7 @@ const Admin = () => {
       homepage: "Homepage Sections",
       megamenu: "Mega Menu",
       pages: "Pages Content",
-<<<<<<< HEAD
       faq: "FAQ Management",
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       content: "Branding & Content",
       footer: "Footer Menu",
       popups: "Popup Notifications",
@@ -274,7 +239,6 @@ const Admin = () => {
                 <div className="p-2.5 bg-gradient-to-br from-primary to-primary/70 rounded-xl shadow-lg shadow-primary/20 w-fit">
                   <LayoutDashboard className="w-6 h-6 text-primary-foreground" />
                 </div>
-<<<<<<< HEAD
                 <div className="flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <div>
@@ -287,15 +251,6 @@ const Admin = () => {
                     </div>
                     {/* Role badge removed per request */}
                   </div>
-=======
-                <div>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                    {getPageTitle()}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Manage your store content, users, and settings
-                  </p>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                 </div>
               </div>
             </div>

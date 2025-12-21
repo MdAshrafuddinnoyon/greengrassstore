@@ -119,7 +119,6 @@ export const LocalQuickViewModal = ({ isOpen, onClose, product }: LocalQuickView
   };
 
   const handleAddToCart = () => {
-<<<<<<< HEAD
     const cartItem = {
       product: {
         node: {
@@ -154,10 +153,6 @@ export const LocalQuickViewModal = ({ isOpen, onClose, product }: LocalQuickView
           options: []
         }
       },
-=======
-    addItem({
-      product: { ...product, featured_image: displayImage },
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       variantId: selectedVariant?.id || product.id,
       variantTitle: selectedVariant 
         ? [selectedVariant.option1_value, selectedVariant.option2_value, selectedVariant.option3_value].filter(Boolean).join(' / ')
@@ -165,14 +160,9 @@ export const LocalQuickViewModal = ({ isOpen, onClose, product }: LocalQuickView
       price: { amount: currentPrice.toString(), currencyCode: product.currency },
       quantity,
       selectedOptions: Object.entries(selectedOptions).map(([name, value]) => ({ name, value }))
-<<<<<<< HEAD
     };
     
     addItem(cartItem);
-=======
-    });
-    
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     toast.success('Added to cart');
     onClose();
   };
@@ -197,7 +187,6 @@ export const LocalQuickViewModal = ({ isOpen, onClose, product }: LocalQuickView
       removeFromCompare(product.id);
       toast.success('Removed from compare');
     } else {
-<<<<<<< HEAD
       const shopifyLikeProduct = {
         node: {
           id: product.id,
@@ -218,9 +207,6 @@ export const LocalQuickViewModal = ({ isOpen, onClose, product }: LocalQuickView
         }
       };
       const added = addToCompare(shopifyLikeProduct);
-=======
-      const added = addToCompare({ ...product, featured_image: displayImage });
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       if (added) {
         toast.success('Added to compare');
       } else {

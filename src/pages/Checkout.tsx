@@ -1,15 +1,7 @@
-<<<<<<< HEAD
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-=======
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { FooterFeaturesBar } from "@/components/shared/FooterFeaturesBar";
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useCartStore } from "@/stores/cartStore";
@@ -17,10 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput, validatePhoneNumber } from "@/components/ui/phone-input";
 import { motion } from "framer-motion";
-<<<<<<< HEAD
-=======
-import { supabase } from "@/integrations/supabase/client";
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 import { 
   ShoppingCart, 
   Minus, 
@@ -32,14 +20,10 @@ import {
   ChevronRight,
   Loader2,
   ArrowLeft,
-<<<<<<< HEAD
   Package,
   RefreshCw,
   MapPin,
   Percent
-=======
-  Package
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,32 +33,20 @@ const Checkout = () => {
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const navigate = useNavigate();
-<<<<<<< HEAD
   const { shippingSettings, checkoutBanner, paymentGateways } = useSiteSettings();
   const { items, updateQuantity, removeItem, clearCart, createCheckout, isLoading } = useCartStore();
   const [paymentMethod, setPaymentMethod] = useState<"online" | "whatsapp" | "home_delivery">("online");
   const [customerInfo, setCustomerInfo] = useState({
     email: "",
     name: "",
-=======
-  const { shippingSettings } = useSiteSettings();
-  const { items, updateQuantity, removeItem, clearCart, isLoading } = useCartStore();
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "whatsapp" | "home_delivery">("online");
-  const [customerInfo, setCustomerInfo] = useState({
-    name: "",
-    email: "",
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     phone: "",
     address: "",
     city: "",
     notes: "",
   });
-<<<<<<< HEAD
 
   // Create Account checkbox state
   const [createAccount, setCreateAccount] = useState(false);
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
@@ -88,47 +60,6 @@ const Checkout = () => {
 
   // Privacy policy checkbox
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-<<<<<<< HEAD
-=======
-  
-  // Auto-fill customer info for logged-in users
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          // Fetch user profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, phone, address, city')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (profile) {
-            setCustomerInfo(prev => ({
-              ...prev,
-              name: profile.full_name || prev.name,
-              phone: profile.phone || prev.phone,
-              address: profile.address || prev.address,
-              city: profile.city || prev.city,
-              email: user.email || prev.email,
-            }));
-          } else {
-            // Just set email from auth
-            setCustomerInfo(prev => ({
-              ...prev,
-              email: user.email || prev.email,
-            }));
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
-
-    fetchUserProfile();
-  }, []);
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
@@ -223,7 +154,6 @@ const Checkout = () => {
     toast.success(isArabic ? "تم إزالة كود الخصم" : "Coupon removed");
   };
 
-<<<<<<< HEAD
   const handleShopifyCheckout = async () => {
     try {
       await createCheckout();
@@ -241,15 +171,6 @@ const Checkout = () => {
       `${index + 1}. ${(item.product?.node?.title || 'Unknown Product')}
     ${item.selectedOptions.map(opt => `${opt.name}: ${opt.value}`).join(', ')}
     Qty: ${item.quantity} × ${currency} ${parseFloat(item.price.amount).toFixed(2)} = ${currency} ${(parseFloat(item.price.amount) * item.quantity).toFixed(2)}`
-=======
-  // Online checkout removed - using home delivery only
-
-  const generateOrderMessage = (paymentType: string) => {
-    const itemsList = items.map((item, index) => 
-      `${index + 1}. ${item.product.name}
-   ${item.selectedOptions.map(opt => `${opt.name}: ${opt.value}`).join(', ')}
-   Qty: ${item.quantity} × ${currency} ${parseFloat(item.price.amount).toFixed(2)} = ${currency} ${(parseFloat(item.price.amount) * item.quantity).toFixed(2)}`
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     ).join('\n\n');
 
     return `🛒 *New Order - Green Grass Store*
@@ -309,7 +230,6 @@ Please confirm my order. Thank you!`;
       // Create order in Supabase
       const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
       const orderItems = items.map(item => ({
-<<<<<<< HEAD
         name: item.product?.node?.title || 'Unknown Product',
         options: item.selectedOptions.map(o => o.value).join(', '),
         quantity: item.quantity,
@@ -319,17 +239,6 @@ Please confirm my order. Thank you!`;
 
       const { supabase } = await import('@/integrations/supabase/client');
       
-=======
-        name: item.product.name,
-        productId: item.product.id,
-        options: item.selectedOptions.map(o => o.value).join(', '),
-        quantity: item.quantity,
-        price: parseFloat(item.price.amount),
-        total: parseFloat(item.price.amount) * item.quantity,
-        image: item.product.featured_image
-      }));
-
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       // Get current user for linking order
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -352,7 +261,6 @@ Please confirm my order. Thank you!`;
 
       if (error) throw error;
 
-<<<<<<< HEAD
       toast.success(isArabic ? "تم تأكيد طلبك! رقم الطلب: " + orderNumber : "Order confirmed! Order #: " + orderNumber);
 
       // WhatsApp order confirmation notification (to admin/customer)
@@ -381,39 +289,6 @@ Please confirm my order. Thank you!`;
 
       clearCart();
       navigate('/track-order?order=' + orderNumber);
-=======
-      // Reduce stock quantity for each product
-      for (const item of items) {
-        if (item.product.id) {
-          // Get current stock
-          const { data: productData } = await supabase
-            .from('products')
-            .select('stock_quantity')
-            .eq('id', item.product.id)
-            .single();
-          
-          if (productData) {
-            const newStock = Math.max(0, (productData.stock_quantity || 0) - item.quantity);
-            await supabase
-              .from('products')
-              .update({ stock_quantity: newStock })
-              .eq('id', item.product.id);
-          }
-        }
-      }
-
-      // Update coupon used_count if coupon was applied
-      if (appliedCoupon) {
-        await supabase
-          .from('discount_coupons')
-          .update({ used_count: (await supabase.from('discount_coupons').select('used_count').eq('id', appliedCoupon.id).single()).data?.used_count + 1 || 1 })
-          .eq('id', appliedCoupon.id);
-      }
-
-      toast.success(isArabic ? "تم تأكيد طلبك! رقم الطلب: " + orderNumber : "Order confirmed! Order #: " + orderNumber);
-      clearCart();
-      navigate('/thank-you?order=' + orderNumber);
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error(isArabic ? "حدث خطأ في إنشاء الطلب" : "Error creating order");
@@ -450,10 +325,6 @@ Please confirm my order. Thank you!`;
             </Link>
           </motion.div>
         </main>
-<<<<<<< HEAD
-=======
-        <FooterFeaturesBar variant="light" />
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         <Footer />
       </div>
     );
@@ -462,7 +333,6 @@ Please confirm my order. Thank you!`;
   return (
     <div className="min-h-screen flex flex-col bg-gray-50" dir={isArabic ? "rtl" : "ltr"}>
       <Header />
-<<<<<<< HEAD
 
       {/* Admin-configurable Checkout Banner */}
       {checkoutBanner?.enabled && (
@@ -474,9 +344,6 @@ Please confirm my order. Thank you!`;
         </div>
       )}
 
-=======
-      
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       <main className="flex-1 pb-24 lg:pb-0">
         {/* Breadcrumb */}
         <div className="bg-white border-b">
@@ -530,7 +397,6 @@ Please confirm my order. Thank you!`;
                   {items.map((item) => (
                     <div key={item.variantId} className="py-3 sm:py-4 flex gap-3 sm:gap-4">
                       <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
-<<<<<<< HEAD
                         {(() => {
                           // Try Shopify structure first
                           const shopifyImg = item.product?.node?.images?.edges?.[0]?.node?.url;
@@ -553,20 +419,6 @@ Please confirm my order. Thank you!`;
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-gray-900 text-sm sm:text-base line-clamp-2">
                           {item.product?.node?.title || item.product?.name || item.title || 'Unknown Product'}
-=======
-                        {item.product.featured_image && (
-                          <img
-                            src={item.product.featured_image}
-                            alt={item.product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 text-sm sm:text-base line-clamp-2">
-                          {item.product.name}
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                         </h3>
                         {item.selectedOptions.length > 0 && (
                           <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
@@ -582,10 +434,7 @@ Please confirm my order. Thank you!`;
                         <button
                           onClick={() => removeItem(item.variantId)}
                           className="text-gray-400 hover:text-red-500 transition-colors p-1"
-<<<<<<< HEAD
                           title="Remove item"
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                         >
                           <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
@@ -594,10 +443,7 @@ Please confirm my order. Thank you!`;
                           <button
                             onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
                             className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-l-lg"
-<<<<<<< HEAD
                             title="Decrease quantity"
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                           >
                             <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
@@ -607,10 +453,7 @@ Please confirm my order. Thank you!`;
                           <button
                             onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                             className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-r-lg"
-<<<<<<< HEAD
                             title="Increase quantity"
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                           >
                             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
@@ -621,17 +464,12 @@ Please confirm my order. Thank you!`;
                 </div>
               </motion.div>
 
-<<<<<<< HEAD
 
               {/* Customer Information - Redesigned */}
-=======
-              {/* Customer Information */}
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-<<<<<<< HEAD
                 className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
               >
                 <h2 className="text-xl font-bold mb-2 text-primary flex items-center gap-2">
@@ -672,51 +510,11 @@ Please confirm my order. Thank you!`;
                   {/* Email */}
                   <div className="col-span-1">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-=======
-                className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm"
-              >
-                <h2 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">
-                  {isArabic ? "معلومات العميل" : "Customer Information"}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
-                  {isArabic 
-                    ? "مطلوب للطلب عبر واتساب"
-                    : "Required for WhatsApp order"
-                  }
-                </p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div>
-                    <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5 block">
-                      {isArabic ? "الاسم" : "Full Name"} *
-                    </label>
-                    <Input
-                      value={customerInfo.name}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                      placeholder={isArabic ? "أدخل اسمك" : "Enter your name"}
-                      className="text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5 block">
-                      {isArabic ? "رقم الهاتف" : "Phone"} *
-                    </label>
-                    <PhoneInput
-                      value={customerInfo.phone}
-                      onChange={(phone) => setCustomerInfo({ ...customerInfo, phone })}
-                      placeholder="XX XXX XXXX"
-                      defaultCountry="+971"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5 block">
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                       {isArabic ? "البريد الإلكتروني" : "Email"}
                     </label>
                     <Input
                       type="email"
                       value={customerInfo.email}
-<<<<<<< HEAD
                       onChange={e => setCustomerInfo({ ...customerInfo, email: e.target.value })}
                       placeholder={isArabic ? "بريدك الإلكتروني" : "your@email.com"}
                       className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
@@ -725,20 +523,10 @@ Please confirm my order. Thank you!`;
                   {/* City */}
                   <div className="col-span-1">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-=======
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                      placeholder={isArabic ? "بريدك الإلكتروني" : "your@email.com"}
-                      className="text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5 block">
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                       {isArabic ? "المدينة" : "City"}
                     </label>
                     <Input
                       value={customerInfo.city}
-<<<<<<< HEAD
                       onChange={e => setCustomerInfo({ ...customerInfo, city: e.target.value })}
                       placeholder={isArabic ? "دبي، أبوظبي..." : "Dubai, Abu Dhabi..."}
                       className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
@@ -783,36 +571,6 @@ Please confirm my order. Thank you!`;
                     </label>
                   </div>
                 </form>
-=======
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, city: e.target.value })}
-                      placeholder={isArabic ? "دبي، أبوظبي..." : "Dubai, Abu Dhabi..."}
-                      className="text-sm"
-                    />
-                  </div>
-                  <div className="col-span-1 sm:col-span-2">
-                    <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5 block">
-                      {isArabic ? "العنوان" : "Address"}
-                    </label>
-                    <Input
-                      value={customerInfo.address}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
-                      placeholder={isArabic ? "عنوان التوصيل الكامل" : "Full delivery address"}
-                      className="text-sm"
-                    />
-                  </div>
-                  <div className="col-span-1 sm:col-span-2">
-                    <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5 block">
-                      {isArabic ? "ملاحظات" : "Notes"}
-                    </label>
-                    <Input
-                      value={customerInfo.notes}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, notes: e.target.value })}
-                      placeholder={isArabic ? "ملاحظات إضافية للتوصيل" : "Additional delivery notes"}
-                      className="text-sm"
-                    />
-                  </div>
-                </div>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
               </motion.div>
             </div>
 
@@ -907,16 +665,12 @@ Please confirm my order. Thank you!`;
                   </div>
                 </div>
 
-<<<<<<< HEAD
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                 {/* Payment Method Selection */}
                 <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
                   <h3 className="font-medium text-gray-900 text-sm sm:text-base">
                     {isArabic ? "طريقة الدفع" : "Payment Method"}
                   </h3>
-<<<<<<< HEAD
                   {/* Dynamically render enabled payment gateways */}
                   {paymentGateways && paymentGateways.filter(gw => gw.enabled && (gw.type === 'card' || gw.type === 'paypal' || gw.type === 'payoneer' || gw.type === 'bank')).map(gw => (
                     <label
@@ -953,43 +707,6 @@ Please confirm my order. Thank you!`;
                     className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
                       paymentMethod === "whatsapp"
                         ? "border-[#25D366] bg-[#25D366]/5"
-=======
-                  
-
-                  {/* Online Payment Option */}
-                  <label 
-                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                      paymentMethod === "online" 
-                        ? "border-[#2d5a3d] bg-[#2d5a3d]/5" 
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentMethod === "online"}
-                      onChange={() => setPaymentMethod("online")}
-                      className="w-4 h-4 text-[#2d5a3d] flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
-                        <span className="font-medium text-sm sm:text-base">
-                          {isArabic ? "الدفع الإلكتروني" : "Pay Online"}
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate">
-                        {isArabic ? "بطاقة ائتمان / Apple Pay" : "Credit Card / Apple Pay"}
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* WhatsApp Order Option */}
-                  <label 
-                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                      paymentMethod === "whatsapp" 
-                        ? "border-[#25D366] bg-[#25D366]/5" 
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
@@ -1015,7 +732,6 @@ Please confirm my order. Thank you!`;
                     </div>
                   </label>
 
-<<<<<<< HEAD
                   {/* Home Delivery Option (COD) - only if enabled in paymentGateways */}
                   {paymentGateways && paymentGateways.some(gw => gw.enabled && gw.type === 'cod') && (
                     <label
@@ -1045,35 +761,6 @@ Please confirm my order. Thank you!`;
                       </div>
                     </label>
                   )}
-=======
-                  {/* Home Delivery Option */}
-                  <label 
-                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
-                      paymentMethod === "home_delivery" 
-                        ? "border-amber-500 bg-amber-50" 
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="payment"
-                      checked={paymentMethod === "home_delivery"}
-                      onChange={() => setPaymentMethod("home_delivery")}
-                      className="w-4 h-4 text-amber-500 flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0" />
-                        <span className="font-medium text-sm sm:text-base">
-                          {isArabic ? "الدفع عند الاستلام" : "Cash on Delivery"}
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate">
-                        {isArabic ? "ادفع نقداً عند استلام الطلب" : "Pay when you receive"}
-                      </p>
-                    </div>
-                  </label>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 
                   {/* Privacy Policy Checkbox */}
                   <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
@@ -1114,10 +801,7 @@ Please confirm my order. Thank you!`;
                   {/* Place Order Button */}
                   <Button
                     onClick={
-<<<<<<< HEAD
                       paymentMethod === "online" ? handleShopifyCheckout : 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                       paymentMethod === "home_delivery" ? handleHomeDeliveryOrder :
                       handleWhatsAppOrder
                     }
@@ -1159,32 +843,13 @@ Please confirm my order. Thank you!`;
                   )}
                 </div>
 
-<<<<<<< HEAD
                 {/* Trust Badges removed: now only dynamic Footer Features bar is shown below */}
-=======
-                {/* Trust Badges */}
-                <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t space-y-2 sm:space-y-3">
-                  <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
-                    </div>
-                    <span>{isArabic ? "توصيل مجاني فوق 200 درهم" : "Free delivery above AED 200"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Shield className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
-                    </div>
-                    <span>{isArabic ? "دفع آمن 100%" : "100% Secure Payment"}</span>
-                  </div>
-                </div>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
               </motion.div>
             </div>
           </div>
         </div>
       </main>
 
-<<<<<<< HEAD
       {/* Dynamic Footer Features Bar (same as Footer) */}
       <div className="border-b border-white/10 bg-white">
         <div className="container mx-auto px-4 py-6">
@@ -1265,9 +930,6 @@ Please confirm my order. Thank you!`;
         </div>
       </div>
 
-=======
-      <FooterFeaturesBar variant="light" />
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       <Footer />
     </div>
   );

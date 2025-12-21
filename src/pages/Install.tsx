@@ -36,7 +36,6 @@ const Install = () => {
   useEffect(() => {
     const checkInstallation = async () => {
       try {
-<<<<<<< HEAD
         // Fast path: if local flag says installed, trust it to avoid loops
         const localInstalled = localStorage.getItem('installation_complete');
         if (localInstalled === 'true') {
@@ -45,8 +44,6 @@ const Install = () => {
           return;
         }
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         const { data: settings } = await supabase
           .from('site_settings')
           .select('setting_value')
@@ -61,15 +58,10 @@ const Install = () => {
           setIsInstalled(false);
         }
       } catch (error) {
-<<<<<<< HEAD
         // If we cannot read settings (e.g., RLS/permission), assume installed to avoid blocking users
         console.error('Error checking installation, assuming installed:', error);
         setIsInstalled(true);
         navigate('/');
-=======
-        console.error('Error checking installation:', error);
-        setIsInstalled(false);
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       } finally {
         setIsChecking(false);
       }
@@ -130,7 +122,6 @@ const Install = () => {
       if (signUpError) throw new Error(signUpError.message);
 
       if (authData.user) {
-<<<<<<< HEAD
         // Add admin role and profile
         const { error: roleError } = await supabase
           .from('user_roles')
@@ -138,20 +129,10 @@ const Install = () => {
             user_id: authData.user.id,
             role: 'admin',
           }, { onConflict: 'user_id' });
-=======
-        // Add admin role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: authData.user.id,
-            role: 'admin',
-          });
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 
         if (roleError) {
           console.error('Role error:', roleError);
         }
-<<<<<<< HEAD
 
         // Ensure profiles row exists with admin/staff flags
         const { error: profileError } = await supabase
@@ -168,8 +149,6 @@ const Install = () => {
         if (profileError) {
           console.error('Profile upsert error:', profileError);
         }
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       }
       updateStep('admin', 'success', 'Admin user created');
 
@@ -199,11 +178,8 @@ const Install = () => {
       updateStep('complete', 'success', 'Installation complete!');
 
       toast.success('Installation completed successfully!');
-<<<<<<< HEAD
       // Persist local flag to survive reloads even if Supabase read is blocked
       localStorage.setItem('installation_complete', 'true');
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       
       // Redirect to admin after 2 seconds
       setTimeout(() => {

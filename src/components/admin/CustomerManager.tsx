@@ -10,17 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-<<<<<<< HEAD
 import { useRolePermissions } from "@/hooks/useRolePermissions";
 import { triggerCustomerSync } from "@/lib/migrations/syncOrderCustomers";
 import { 
   Loader2, Users, Search, Eye, Phone, MapPin, Calendar, ShoppingBag, 
   Trash2, UserPlus, Download, Upload, FileSpreadsheet, RefreshCw, Crown, Key, Pencil
-=======
-import { 
-  Loader2, Users, Search, Eye, Phone, MapPin, Calendar, ShoppingBag, 
-  Trash2, UserPlus, Download, Upload, FileSpreadsheet, RefreshCw, Crown
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 } from "lucide-react";
 import { ExportButtons } from "./ExportButtons";
 import {
@@ -71,25 +65,17 @@ interface VIPTier {
 }
 
 export const CustomerManager = () => {
-<<<<<<< HEAD
   const { permissions, loading: permLoading, hasPermission } = useRolePermissions();
   const canViewCustomers = permissions.canViewCustomers;
   const canManageCustomers = permissions.canEditCustomers;
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [autoSynced, setAutoSynced] = useState(false);
-=======
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerOrders, setCustomerOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-<<<<<<< HEAD
   const [permissionGranted, setPermissionGranted] = useState(canViewCustomers);
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -103,27 +89,20 @@ export const CustomerManager = () => {
   const [addLoading, setAddLoading] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     full_name: "",
-<<<<<<< HEAD
     email: "",
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     phone: "",
     address: "",
     city: "",
     country: ""
   });
-<<<<<<< HEAD
   const [generatePassword, setGeneratePassword] = useState(true);
   const [manualPassword, setManualPassword] = useState("");
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   
   // Delete confirmation
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-<<<<<<< HEAD
   // Password Reset
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [customerForReset, setCustomerForReset] = useState<Customer | null>(null);
@@ -136,8 +115,6 @@ export const CustomerManager = () => {
   const [customerForEdit, setCustomerForEdit] = useState<Customer | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   // CSV Import
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
@@ -146,18 +123,12 @@ export const CustomerManager = () => {
   const [vipDialogOpen, setVipDialogOpen] = useState(false);
   const [customerForVip, setCustomerForVip] = useState<Customer | null>(null);
   const [selectedTier, setSelectedTier] = useState<string>("");
-<<<<<<< HEAD
   const [syncLoading, setSyncLoading] = useState(false);
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-<<<<<<< HEAD
       // Fetch profiles (includes email column)
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -165,10 +136,7 @@ export const CustomerManager = () => {
 
       if (profilesError) throw profilesError;
 
-<<<<<<< HEAD
       // Fetch orders for spend and count
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       const { data: orders, error: ordersError } = await supabase
         .from('orders')
         .select('user_id, total');
@@ -189,10 +157,7 @@ export const CustomerManager = () => {
 
       if (tiersData) setVipTiers(tiersData);
 
-<<<<<<< HEAD
       // Build stats map from orders
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       const statsMap = new Map<string, { count: number; total: number }>();
       orders?.forEach(order => {
         if (order.user_id) {
@@ -204,42 +169,27 @@ export const CustomerManager = () => {
         }
       });
 
-<<<<<<< HEAD
       // Build VIP map
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       const vipMap = new Map<string, { tier_id: string | null; is_active: boolean }>();
       vipMembers?.forEach(member => {
         vipMap.set(member.user_id, { tier_id: member.tier_id, is_active: member.is_active });
       });
 
-<<<<<<< HEAD
       // Merge everything together
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       const customersWithStats = profiles?.map(profile => {
         const vipInfo = vipMap.get(profile.user_id);
         const tierInfo = vipInfo?.tier_id ? tiersData?.find(t => t.id === vipInfo.tier_id) : null;
         return {
           ...profile,
-<<<<<<< HEAD
           email: profile.email || '',
           orders_count: statsMap.get(profile.user_id)?.count || 0,
           total_spent: statsMap.get(profile.user_id)?.total || 0,
           is_vip: vipInfo?.is_active || false,
           vip_tier: tierInfo?.name || null,
-=======
-          email: '',
-          orders_count: statsMap.get(profile.user_id)?.count || 0,
-          total_spent: statsMap.get(profile.user_id)?.total || 0,
-          is_vip: vipInfo?.is_active || false,
-          vip_tier: tierInfo?.name || null
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         };
       }) || [];
 
       setCustomers(customersWithStats);
-<<<<<<< HEAD
 
       // If no customers are present, attempt a one-time auto-sync from orders
       if (customersWithStats.length === 0 && !autoSynced) {
@@ -249,11 +199,6 @@ export const CustomerManager = () => {
     } catch (error: any) {
       console.error('Error fetching customers:', error);
       toast.error(`Failed to load customers: ${error.message || 'Unknown error'}`);
-=======
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      toast.error('Failed to load customers');
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     } finally {
       setLoading(false);
     }
@@ -277,7 +222,6 @@ export const CustomerManager = () => {
     }
   };
 
-<<<<<<< HEAD
   const handleSyncCustomersFromOrders = async () => {
     setSyncLoading(true);
     try {
@@ -297,8 +241,6 @@ export const CustomerManager = () => {
     console.log('✅ Customer permission updated:', canViewCustomers);
   }, [canViewCustomers]);
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   useEffect(() => {
     fetchCustomers();
 
@@ -349,7 +291,6 @@ export const CustomerManager = () => {
       toast.error("Customer name is required");
       return;
     }
-<<<<<<< HEAD
     if (!newCustomer.email.trim()) {
       toast.error("Customer email is required");
       return;
@@ -407,33 +348,6 @@ export const CustomerManager = () => {
     } catch (error: any) {
       console.error('Error adding customer:', error);
       toast.error(error?.message || "Failed to add customer");
-=======
-
-    setAddLoading(true);
-    try {
-      const tempUserId = crypto.randomUUID();
-      
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: tempUserId,
-          full_name: newCustomer.full_name,
-          phone: newCustomer.phone || null,
-          address: newCustomer.address || null,
-          city: newCustomer.city || null,
-          country: newCustomer.country || null
-        });
-
-      if (error) throw error;
-
-      toast.success("Customer added successfully");
-      setIsAddDialogOpen(false);
-      setNewCustomer({ full_name: "", phone: "", address: "", city: "", country: "" });
-      fetchCustomers();
-    } catch (error) {
-      console.error('Error adding customer:', error);
-      toast.error("Failed to add customer");
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
     } finally {
       setAddLoading(false);
     }
@@ -478,7 +392,6 @@ export const CustomerManager = () => {
     }
   };
 
-<<<<<<< HEAD
   const handleResetPassword = async () => {
     if (!customerForReset?.email) return;
 
@@ -576,8 +489,6 @@ export const CustomerManager = () => {
     }
   };
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   const toggleSelectAll = () => {
     if (selectedIds.length === paginatedCustomers.length) {
       setSelectedIds([]);
@@ -740,7 +651,6 @@ export const CustomerManager = () => {
     );
   }
 
-<<<<<<< HEAD
   if (!permissionGranted) {
     return (
       <Card className="border-destructive">
@@ -755,8 +665,6 @@ export const CustomerManager = () => {
     );
   }
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   return (
     <div className="space-y-6">
       <Card>
@@ -772,7 +680,6 @@ export const CustomerManager = () => {
               </CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
-<<<<<<< HEAD
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -783,13 +690,10 @@ export const CustomerManager = () => {
                 <RefreshCw className="w-4 h-4 mr-1" />
                 {syncLoading ? 'Syncing...' : 'Sync Orders'}
               </Button>
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
               <Button variant="outline" size="sm" onClick={fetchCustomers}>
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Refresh
               </Button>
-<<<<<<< HEAD
               {canManageCustomers && (
                 <>
                   <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
@@ -812,26 +716,6 @@ export const CustomerManager = () => {
                   </DropdownMenu>
                 </>
               )}
-=======
-              <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-                <UserPlus className="w-4 h-4 mr-1" />
-                Add Customer
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Upload className="w-4 h-4 mr-1" />
-                    Import
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => setIsImportDialogOpen(true)}>
-                    <FileSpreadsheet className="w-4 h-4 mr-2" />
-                    Import from CSV
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
               <ExportButtons 
                 data={getExportData()} 
                 filename="customers" 
@@ -868,11 +752,7 @@ export const CustomerManager = () => {
           </div>
 
           {/* Bulk Actions */}
-<<<<<<< HEAD
           {selectedIds.length > 0 && canManageCustomers && (
-=======
-          {selectedIds.length > 0 && (
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
             <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg mb-4">
               <span className="text-sm font-medium">{selectedIds.length} selected</span>
               <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
@@ -889,7 +769,6 @@ export const CustomerManager = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-<<<<<<< HEAD
                   {canManageCustomers && (
                     <TableHead className="w-12">
                       <Checkbox 
@@ -898,14 +777,6 @@ export const CustomerManager = () => {
                       />
                     </TableHead>
                   )}
-=======
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      checked={selectedIds.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                   <TableHead>Customer</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>VIP Status</TableHead>
@@ -918,11 +789,7 @@ export const CustomerManager = () => {
               <TableBody>
                 {paginatedCustomers.length === 0 ? (
                   <TableRow>
-<<<<<<< HEAD
                     <TableCell colSpan={canManageCustomers ? 8 : 7} className="text-center py-8">
-=======
-                    <TableCell colSpan={8} className="text-center py-8">
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                       <Users className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
                       <p className="text-muted-foreground">No customers found</p>
                     </TableCell>
@@ -930,7 +797,6 @@ export const CustomerManager = () => {
                 ) : (
                   paginatedCustomers.map((customer) => (
                     <TableRow key={customer.id}>
-<<<<<<< HEAD
                       {canManageCustomers && (
                         <TableCell>
                           <Checkbox 
@@ -939,14 +805,6 @@ export const CustomerManager = () => {
                           />
                         </TableCell>
                       )}
-=======
-                      <TableCell>
-                        <Checkbox 
-                          checked={selectedIds.includes(customer.id)}
-                          onCheckedChange={() => toggleSelectOne(customer.id)}
-                        />
-                      </TableCell>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                       <TableCell>
                         <div className="font-medium">{customer.full_name || 'No name'}</div>
                         <div className="text-xs text-muted-foreground">{customer.phone || '-'}</div>
@@ -1000,7 +858,6 @@ export const CustomerManager = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleViewCustomer(customer)}
-<<<<<<< HEAD
                             title="View details"
                           >
                             <Eye className="w-4 h-4" />
@@ -1035,11 +892,6 @@ export const CustomerManager = () => {
                               </Button>
                             </>
                           )}
-=======
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                           {customer.is_vip && (
                             <Button
                               variant="ghost"
@@ -1051,7 +903,6 @@ export const CustomerManager = () => {
                               <Crown className="w-4 h-4" />
                             </Button>
                           )}
-<<<<<<< HEAD
                           {canManageCustomers && (
                             <Button
                               variant="ghost"
@@ -1065,19 +916,6 @@ export const CustomerManager = () => {
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           )}
-=======
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => {
-                              setCustomerToDelete(customer);
-                              setDeleteConfirmOpen(true);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1138,12 +976,8 @@ export const CustomerManager = () => {
       </Card>
 
       {/* Add Customer Dialog */}
-<<<<<<< HEAD
       {canManageCustomers && (
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-=======
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1153,7 +987,6 @@ export const CustomerManager = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-<<<<<<< HEAD
               <Label htmlFor="customer-email">Email *</Label>
               <Input
                 id="customer-email"
@@ -1181,8 +1014,6 @@ export const CustomerManager = () => {
               />
             </div>
             <div className="space-y-2">
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
               <Label htmlFor="customer-name">Full Name *</Label>
               <Input
                 id="customer-name"
@@ -1241,10 +1072,7 @@ export const CustomerManager = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-<<<<<<< HEAD
       )}
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 
       {/* View Customer Dialog */}
       <Dialog open={!!selectedCustomer} onOpenChange={() => setSelectedCustomer(null)}>
@@ -1317,12 +1145,8 @@ export const CustomerManager = () => {
       </Dialog>
 
       {/* Delete Confirmation */}
-<<<<<<< HEAD
       {canManageCustomers && (
         <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-=======
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Customer</AlertDialogTitle>
@@ -1343,7 +1167,6 @@ export const CustomerManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-<<<<<<< HEAD
       )}
 
       {/* Password Reset Dialog */}
@@ -1505,11 +1328,6 @@ export const CustomerManager = () => {
       {/* Import Dialog */}
       {canManageCustomers && (
         <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-=======
-
-      {/* Import Dialog */}
-      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Import Customers from CSV</DialogTitle>
@@ -1526,10 +1344,7 @@ export const CustomerManager = () => {
           </div>
         </DialogContent>
       </Dialog>
-<<<<<<< HEAD
       )}
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 
       {/* VIP Assignment Dialog */}
       <Dialog open={vipDialogOpen} onOpenChange={setVipDialogOpen}>
@@ -1578,8 +1393,4 @@ export const CustomerManager = () => {
       </Dialog>
     </div>
   );
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066

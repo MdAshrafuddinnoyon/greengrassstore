@@ -65,11 +65,8 @@ export const OrdersManager = () => {
     tax: 0,
     payment_method: "cash",
     notes: "",
-<<<<<<< HEAD
     water_type: "",
     bulb_type: ""
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
   });
 
   // Pagination
@@ -682,10 +679,7 @@ export const OrdersManager = () => {
                   </div>
                 </div>
 
-<<<<<<< HEAD
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                 <div className="space-y-2">
                   <Label>Order Items</Label>
                   {newOrder.items.map((item, index) => (
@@ -738,7 +732,6 @@ export const OrdersManager = () => {
                   </Button>
                 </div>
 
-<<<<<<< HEAD
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label>Water Type</Label>
@@ -768,8 +761,6 @@ export const OrdersManager = () => {
                   </div>
                 </div>
 
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>Tax (AED)</Label>

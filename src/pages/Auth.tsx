@@ -34,7 +34,6 @@ const Auth = () => {
   const { checkPassword, isLeaked, count, isChecking: isCheckingPassword } = useLeakedPasswordCheck();
   const { t } = useLanguage();
 
-<<<<<<< HEAD
   // Check user role and redirect accordingly
   const checkRoleAndRedirect = async (userId: string) => {
     try {
@@ -85,35 +84,18 @@ const Auth = () => {
             description: t("auth.welcomeBack")
           });
           await checkRoleAndRedirect(session.user.id);
-=======
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session?.user) {
-          navigate("/account");
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         }
       }
     );
 
-<<<<<<< HEAD
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         await checkRoleAndRedirect(session.user.id);
-=======
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        navigate("/account");
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
       }
     });
 
     return () => subscription.unsubscribe();
-<<<<<<< HEAD
   }, [navigate, t]);
-=======
-  }, [navigate]);
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
 
   const validateForm = () => {
     try {
@@ -175,11 +157,7 @@ const Auth = () => {
         toast.success(t("auth.loginSuccess"));
       } else {
         const redirectUrl = `${window.location.origin}/`;
-<<<<<<< HEAD
         const { data: signUpData, error } = await supabase.auth.signUp({
-=======
-        const { error } = await supabase.auth.signUp({
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
           email,
           password,
           options: {
@@ -190,7 +168,6 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-<<<<<<< HEAD
         // Create customer profile on signup
         if (signUpData.user) {
           await supabase
@@ -208,8 +185,6 @@ const Auth = () => {
             .from('user_roles')
             .upsert({ user_id: signUpData.user.id, role: 'customer' }, { onConflict: 'user_id' });
         }
-=======
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         toast.success(t("auth.signupSuccess"));
       }
     } catch (error: any) {
@@ -253,11 +228,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-<<<<<<< HEAD
           redirectTo: `${window.location.origin}/`,
-=======
-          redirectTo: `${window.location.origin}/account`,
->>>>>>> dfcf12d2b1fa1c8d28b54c9344caef07b69c8066
         },
       });
       if (error) throw error;
