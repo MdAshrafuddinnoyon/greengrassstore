@@ -99,6 +99,8 @@ export const ProductManager = () => {
 
   // Bulk Selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkCategory, setBulkCategory] = useState<string>("");
+  const [bulkSubcategory, setBulkSubcategory] = useState<string>("");
 
   const fetchCategories = async () => {
     const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('display_order');
@@ -329,6 +331,51 @@ export const ProductManager = () => {
     } catch (error) {
       toast.error('Failed to update products');
     }
+  };
+
+  const handleBulkCategoryAssign = async () => {
+    if (selectedIds.length === 0) {
+      toast.error('No products selected');
+      return;
+    }
+    if (!bulkCategory) {
+      toast.error('Please select a category');
+      return;
+    }
+    
+    try {
+      const updateData: { category: string; subcategory?: string } = { 
+        category: bulkCategory 
+      };
+      
+      if (bulkSubcategory) {
+        updateData.subcategory = bulkSubcategory;
+      }
+      
+      const { error } = await supabase
+        .from('products')
+        .update(updateData)
+        .in('id', selectedIds);
+      
+      if (error) throw error;
+      
+      const categoryName = categories.find(c => c.slug === bulkCategory)?.name || bulkCategory;
+      toast.success(`${selectedIds.length} products moved to "${categoryName}"`);
+      setSelectedIds([]);
+      setBulkCategory("");
+      setBulkSubcategory("");
+      fetchProducts();
+    } catch (error) {
+      console.error('Bulk category error:', error);
+      toast.error('Failed to update product categories');
+    }
+  };
+
+  // Get subcategories for selected parent category
+  const getSubcategories = (parentSlug: string) => {
+    const parent = categories.find(c => c.slug === parentSlug);
+    if (!parent) return [];
+    return categories.filter(c => c.parent_id === parent.id);
   };
 
   const handleDuplicate = (product: Product) => {
@@ -568,24 +615,73 @@ export const ProductManager = () => {
 
             {/* Bulk Actions */}
             {selectedIds.length > 0 && (
-              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                <span className="text-sm font-medium">{selectedIds.length} selected</span>
-                <Button size="sm" variant="outline" onClick={() => handleBulkActivate(true)}>
-                  Activate
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleBulkActivate(false)}>
-                  Deactivate
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleBulkFeatured(true)}>
-                  Mark Featured
-                </Button>
-                <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  Delete
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
-                  Clear
-                </Button>
+              <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{selectedIds.length} product(s) selected</span>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>
+                    <X className="w-4 h-4 mr-1" />
+                    Clear Selection
+                  </Button>
+                </div>
+                
+                {/* Bulk Category Assignment */}
+                <div className="flex flex-wrap items-end gap-3 p-3 bg-background rounded-md border">
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-xs font-medium">Assign to Category</Label>
+                    <Select value={bulkCategory} onValueChange={(v) => { setBulkCategory(v); setBulkSubcategory(""); }}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.filter(c => !c.parent_id).map(cat => (
+                          <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {bulkCategory && getSubcategories(bulkCategory).length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-xs font-medium">Subcategory (Optional)</Label>
+                      <Select value={bulkSubcategory} onValueChange={setBulkSubcategory}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select subcategory" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {getSubcategories(bulkCategory).map(subcat => (
+                            <SelectItem key={subcat.id} value={subcat.slug}>{subcat.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  <Button size="sm" onClick={handleBulkCategoryAssign} disabled={!bulkCategory}>
+                    Move to Category
+                  </Button>
+                </div>
+
+                {/* Other Bulk Actions */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Quick Actions:</span>
+                  <Button size="sm" variant="outline" onClick={() => handleBulkActivate(true)}>
+                    Activate
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleBulkActivate(false)}>
+                    Deactivate
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleBulkFeatured(true)}>
+                    Mark Featured
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleBulkFeatured(false)}>
+                    Unmark Featured
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
               </div>
             )}
             
