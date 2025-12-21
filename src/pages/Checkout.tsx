@@ -1,0 +1,938 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useCartStore } from "@/stores/cartStore";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PhoneInput, validatePhoneNumber } from "@/components/ui/phone-input";
+import { motion } from "framer-motion";
+import { 
+  ShoppingCart, 
+  Minus, 
+  Plus, 
+  Trash2, 
+  Truck, 
+  Shield, 
+  CreditCard, 
+  ChevronRight,
+  Loader2,
+  ArrowLeft,
+  Package,
+  RefreshCw,
+  MapPin,
+  Percent
+} from "lucide-react";
+import { toast } from "sonner";
+
+const WHATSAPP_URL = "https://wa.me/+971547751901";
+
+const Checkout = () => {
+  const { language } = useLanguage();
+  const isArabic = language === "ar";
+  const navigate = useNavigate();
+  const { shippingSettings, checkoutBanner, paymentGateways } = useSiteSettings();
+  const { items, updateQuantity, removeItem, clearCart, createCheckout, isLoading } = useCartStore();
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "whatsapp" | "home_delivery">("online");
+  const [customerInfo, setCustomerInfo] = useState({
+    email: "",
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    notes: "",
+  });
+
+  // Create Account checkbox state
+  const [createAccount, setCreateAccount] = useState(false);
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount_type: string;
+    discount_value: number;
+    id: string;
+  } | null>(null);
+
+  // Privacy policy checkbox
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
+  
+  // Calculate coupon discount
+  const couponDiscount = appliedCoupon 
+    ? appliedCoupon.discount_type === 'percentage'
+      ? (subtotal * appliedCoupon.discount_value / 100)
+      : appliedCoupon.discount_value
+    : 0;
+  
+  const subtotalAfterCoupon = subtotal - couponDiscount;
+  
+  // Dynamic shipping calculation based on admin settings
+  const freeShippingThreshold = shippingSettings.freeShippingThreshold;
+  const shippingCost = shippingSettings.shippingCost;
+  const shipping = shippingSettings.freeShippingEnabled && subtotalAfterCoupon >= freeShippingThreshold ? 0 : shippingCost;
+  const amountForFreeShipping = freeShippingThreshold - subtotalAfterCoupon;
+  
+  const total = subtotalAfterCoupon + shipping;
+  const currency = items[0]?.price.currencyCode || "AED";
+
+  // Apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error(isArabic ? "يرجى إدخال كود الخصم" : "Please enter a coupon code");
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase
+        .from('discount_coupons')
+        .select('*')
+        .eq('code', couponCode.trim().toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !data) {
+        toast.error(isArabic ? "كود الخصم غير صالح" : "Invalid coupon code");
+        return;
+      }
+
+      // Check if expired
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        toast.error(isArabic ? "كود الخصم منتهي الصلاحية" : "Coupon has expired");
+        return;
+      }
+
+      // Check minimum order
+      if (data.min_order_amount && subtotal < data.min_order_amount) {
+        toast.error(
+          isArabic 
+            ? `الحد الأدنى للطلب ${data.min_order_amount} درهم` 
+            : `Minimum order amount is AED ${data.min_order_amount}`
+        );
+        return;
+      }
+
+      // Check max uses
+      if (data.max_uses && data.used_count >= data.max_uses) {
+        toast.error(isArabic ? "تم استخدام كود الخصم بالكامل" : "Coupon usage limit reached");
+        return;
+      }
+
+      setAppliedCoupon({
+        code: data.code,
+        discount_type: data.discount_type,
+        discount_value: Number(data.discount_value),
+        id: data.id
+      });
+
+      toast.success(
+        isArabic 
+          ? `تم تطبيق الخصم: ${data.discount_type === 'percentage' ? `${data.discount_value}%` : `${data.discount_value} درهم`}` 
+          : `Discount applied: ${data.discount_type === 'percentage' ? `${data.discount_value}%` : `AED ${data.discount_value}`}`
+      );
+    } catch (error) {
+      console.error('Coupon error:', error);
+      toast.error(isArabic ? "حدث خطأ" : "An error occurred");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // Remove coupon
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast.success(isArabic ? "تم إزالة كود الخصم" : "Coupon removed");
+  };
+
+  const handleShopifyCheckout = async () => {
+    try {
+      await createCheckout();
+      const checkoutUrl = useCartStore.getState().checkoutUrl;
+      if (checkoutUrl) {
+        window.open(checkoutUrl, '_blank');
+      }
+    } catch (error) {
+      toast.error(isArabic ? "فشل في إنشاء الطلب" : "Failed to create checkout");
+    }
+  };
+
+  const generateOrderMessage = (paymentType: string) => {
+    const itemsList = items.map((item, index) => 
+      `${index + 1}. ${(item.product?.node?.title || 'Unknown Product')}
+    ${item.selectedOptions.map(opt => `${opt.name}: ${opt.value}`).join(', ')}
+    Qty: ${item.quantity} × ${currency} ${parseFloat(item.price.amount).toFixed(2)} = ${currency} ${(parseFloat(item.price.amount) * item.quantity).toFixed(2)}`
+    ).join('\n\n');
+
+    return `🛒 *New Order - Green Grass Store*
+
+💳 *Payment Method:* ${paymentType}
+
+👤 *Customer Details:*
+Name: ${customerInfo.name}
+Phone: ${customerInfo.phone}
+Email: ${customerInfo.email || "Not provided"}
+Address: ${customerInfo.address || "Not provided"}
+City: ${customerInfo.city || "Not provided"}
+
+📦 *Order Items:*
+${itemsList}
+
+💰 *Order Summary:*
+Subtotal: ${currency} ${subtotal.toFixed(2)}
+Shipping: ${shipping === 0 ? "FREE" : `${currency} ${shipping.toFixed(2)}`}
+*Total: ${currency} ${total.toFixed(2)}*
+
+📝 *Notes:* ${customerInfo.notes || "None"}
+
+---
+Please confirm my order. Thank you!`;
+  };
+
+
+  const handleWhatsAppOrder = () => {
+    if (!customerInfo.name || !customerInfo.phone) {
+      toast.error(isArabic ? "يرجى إدخال الاسم ورقم الهاتف" : "Please enter name and phone number");
+      return;
+    }
+    
+    if (!validatePhoneNumber(customerInfo.phone)) {
+      toast.error(isArabic ? "يرجى إدخال رقم هاتف صحيح" : "Please enter a valid phone number");
+      return;
+    }
+
+    const message = generateOrderMessage("📱 WhatsApp Order");
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`${WHATSAPP_URL}?text=${encodedMessage}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleHomeDeliveryOrder = async () => {
+    if (!customerInfo.name || !customerInfo.phone || !customerInfo.address) {
+      toast.error(isArabic ? "يرجى إدخال الاسم ورقم الهاتف والعنوان" : "Please enter name, phone and address");
+      return;
+    }
+    
+    if (!validatePhoneNumber(customerInfo.phone)) {
+      toast.error(isArabic ? "يرجى إدخال رقم هاتف صحيح" : "Please enter a valid phone number");
+      return;
+    }
+
+    try {
+      // Create order in Supabase
+      const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+      const orderItems = items.map(item => ({
+        name: item.product?.node?.title || 'Unknown Product',
+        options: item.selectedOptions.map(o => o.value).join(', '),
+        quantity: item.quantity,
+        price: parseFloat(item.price.amount),
+        total: parseFloat(item.price.amount) * item.quantity
+      }));
+
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Get current user for linking order
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.from('orders').insert({
+        order_number: orderNumber,
+        customer_name: customerInfo.name,
+        customer_email: customerInfo.email || user?.email || '',
+        customer_phone: customerInfo.phone,
+        customer_address: `${customerInfo.address}, ${customerInfo.city}`,
+        items: orderItems,
+        subtotal: subtotal,
+        shipping: shipping,
+        tax: 0,
+        total: total,
+        payment_method: 'home_delivery',
+        notes: customerInfo.notes,
+        status: 'pending',
+        user_id: user?.id || null
+      });
+
+      if (error) throw error;
+
+      toast.success(isArabic ? "تم تأكيد طلبك! رقم الطلب: " + orderNumber : "Order confirmed! Order #: " + orderNumber);
+
+      // WhatsApp order confirmation notification (to admin/customer)
+      try {
+        // Send to admin WhatsApp (configurable)
+        const adminWhatsApp = "+971547751901"; // TODO: make dynamic from settings if needed
+        const adminMessage =
+          `🛒 *New Order Placed*\n\n` +
+          `Order #: ${orderNumber}\n` +
+          `Name: ${customerInfo.name}\n` +
+          `Phone: ${customerInfo.phone}\n` +
+          `Address: ${customerInfo.address}, ${customerInfo.city}\n` +
+          `Total: ${currency} ${total.toFixed(2)}\n` +
+          `---\n` +
+          `Please check the admin panel for full details.`;
+        window.open(`https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(adminMessage)}`, '_blank', 'noopener,noreferrer');
+
+        // Optionally, send to customer WhatsApp (if phone is WhatsApp-enabled)
+        // const customerMessage = isArabic
+        //   ? `شكرًا لطلبك! رقم الطلب: ${orderNumber}\nسنتواصل معك قريبًا.`
+        //   : `Thank you for your order! Order #: ${orderNumber}\nWe will contact you soon.`;
+        // window.open(`https://wa.me/${customerInfo.phone}?text=${encodeURIComponent(customerMessage)}`, '_blank', 'noopener,noreferrer');
+      } catch (err) {
+        // Ignore WhatsApp errors
+      }
+
+      clearCart();
+      navigate('/track-order?order=' + orderNumber);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error(isArabic ? "حدث خطأ في إنشاء الطلب" : "Error creating order");
+    }
+  };
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50" dir={isArabic ? "rtl" : "ltr"}>
+        <Header />
+        <main className="flex-1 flex items-center justify-center px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center max-w-md"
+          >
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShoppingCart className="w-12 h-12 text-gray-400" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              {isArabic ? "سلة التسوق فارغة" : "Your Cart is Empty"}
+            </h1>
+            <p className="text-gray-500 mb-6">
+              {isArabic 
+                ? "لم تقم بإضافة أي منتجات إلى سلة التسوق بعد"
+                : "You haven't added any products to your cart yet"
+              }
+            </p>
+            <Link to="/shop">
+              <Button className="bg-[#2d5a3d] hover:bg-[#234830]">
+                <Package className="w-4 h-4 mr-2" />
+                {isArabic ? "تسوق الآن" : "Shop Now"}
+              </Button>
+            </Link>
+          </motion.div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50" dir={isArabic ? "rtl" : "ltr"}>
+      <Header />
+
+      {/* Admin-configurable Checkout Banner */}
+      {checkoutBanner?.enabled && (
+        <div
+          className="w-full bg-yellow-100 border-b border-yellow-300 text-yellow-900 text-center py-3 px-2 font-medium text-sm sm:text-base"
+          style={{ background: checkoutBanner.backgroundColor || undefined, color: checkoutBanner.textColor || undefined }}
+        >
+          {isArabic ? (checkoutBanner.textAr || checkoutBanner.text) : checkoutBanner.text}
+        </div>
+      )}
+
+      <main className="flex-1 pb-24 lg:pb-0">
+        {/* Breadcrumb */}
+        <div className="bg-white border-b">
+          <div className="container mx-auto px-4 py-4">
+            <nav className="flex items-center gap-2 text-sm">
+              <Link to="/" className="text-gray-500 hover:text-gray-700">
+                {isArabic ? "الرئيسية" : "Home"}
+              </Link>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+              <Link to="/shop" className="text-gray-500 hover:text-gray-700">
+                {isArabic ? "المتجر" : "Shop"}
+              </Link>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-900 font-medium">
+                {isArabic ? "إتمام الطلب" : "Checkout"}
+              </span>
+            </nav>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center gap-4 mb-8">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="rounded-full"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              {isArabic ? "إتمام الطلب" : "Checkout"}
+            </h1>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Cart Items & Customer Info */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Cart Items */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm"
+              >
+                <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-[#2d5a3d]" />
+                  {isArabic ? "المنتجات" : "Cart Items"} ({totalItems})
+                </h2>
+                
+                <div className="divide-y">
+                  {items.map((item) => (
+                    <div key={item.variantId} className="py-3 sm:py-4 flex gap-3 sm:gap-4">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden flex-shrink-0">
+                        {(() => {
+                          // Try Shopify structure first
+                          const shopifyImg = item.product?.node?.images?.edges?.[0]?.node?.url;
+                          // Try local/Supabase structure
+                          const localImg = item.product?.image || item.product?.featured_image || (Array.isArray(item.product?.images) ? item.product.images[0] : undefined);
+                          const fallbackImg = item.image;
+                          const imgUrl = shopifyImg || localImg || fallbackImg;
+                          if (imgUrl) {
+                            return (
+                              <img
+                                src={imgUrl}
+                                alt={item.product?.node?.title || item.product?.name || item.title || 'Product Image'}
+                                className="w-full h-full object-cover"
+                              />
+                            );
+                          }
+                          return <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">No Image</div>;
+                        })()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 text-sm sm:text-base line-clamp-2">
+                          {item.product?.node?.title || item.product?.name || item.title || 'Unknown Product'}
+                        </h3>
+                        {item.selectedOptions.length > 0 && (
+                          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                            {item.selectedOptions.map(opt => opt.value).join(' • ')}
+                          </p>
+                        )}
+                        <p className="font-semibold text-[#2d5a3d] mt-1 text-sm sm:text-base">
+                          {currency} {parseFloat(item.price.amount).toFixed(2)}
+                        </p>
+                      </div>
+                      
+                      <div className="flex flex-col items-end gap-1.5 sm:gap-2">
+                        <button
+                          onClick={() => removeItem(item.variantId)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                        
+                        <div className="flex items-center border rounded-lg">
+                          <button
+                            onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+                            className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-l-lg"
+                            title="Decrease quantity"
+                          >
+                            <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </button>
+                          <span className="w-6 sm:w-8 text-center text-xs sm:text-sm font-medium">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                            className="p-1 sm:p-1.5 hover:bg-gray-100 rounded-r-lg"
+                            title="Increase quantity"
+                          >
+                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+
+              {/* Customer Information - Redesigned */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
+              >
+                <h2 className="text-xl font-bold mb-2 text-primary flex items-center gap-2">
+                  <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {isArabic ? "معلومات العميل" : "Customer Information"}
+                </h2>
+                <p className="text-sm text-muted-foreground mb-5">
+                  {isArabic ? "يرجى تعبئة جميع الحقول المطلوبة بدقة لضمان توصيل الطلب بشكل صحيح." : "Please fill in all required fields accurately for smooth delivery."}
+                </p>
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Name */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {isArabic ? "الاسم الكامل" : "Full Name"} <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={customerInfo.name}
+                      onChange={e => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+                      placeholder={isArabic ? "أدخل اسمك الكامل" : "Enter your full name"}
+                      className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                      required
+                    />
+                  </div>
+                  {/* Phone */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {isArabic ? "رقم الهاتف" : "Phone Number"} <span className="text-red-500">*</span>
+                    </label>
+                    <PhoneInput
+                      value={customerInfo.phone}
+                      onChange={phone => setCustomerInfo({ ...customerInfo, phone })}
+                      placeholder={isArabic ? "05X XXX XXXX" : "05X XXX XXXX"}
+                      defaultCountry="+971"
+                      className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                      required
+                    />
+                  </div>
+                  {/* Email */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {isArabic ? "البريد الإلكتروني" : "Email"}
+                    </label>
+                    <Input
+                      type="email"
+                      value={customerInfo.email}
+                      onChange={e => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+                      placeholder={isArabic ? "بريدك الإلكتروني" : "your@email.com"}
+                      className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  {/* City */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {isArabic ? "المدينة" : "City"}
+                    </label>
+                    <Input
+                      value={customerInfo.city}
+                      onChange={e => setCustomerInfo({ ...customerInfo, city: e.target.value })}
+                      placeholder={isArabic ? "دبي، أبوظبي..." : "Dubai, Abu Dhabi..."}
+                      className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  {/* Address */}
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {isArabic ? "العنوان الكامل" : "Full Address"} <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={customerInfo.address}
+                      onChange={e => setCustomerInfo({ ...customerInfo, address: e.target.value })}
+                      placeholder={isArabic ? "عنوان التوصيل الكامل" : "Full delivery address"}
+                      className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                      required
+                    />
+                  </div>
+                  {/* Notes */}
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {isArabic ? "ملاحظات إضافية" : "Additional Notes"}
+                    </label>
+                    <Input
+                      value={customerInfo.notes}
+                      onChange={e => setCustomerInfo({ ...customerInfo, notes: e.target.value })}
+                      placeholder={isArabic ? "أي تعليمات خاصة للتوصيل؟" : "Any special delivery instructions?"}
+                      className="h-12 text-base border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                  {/* Create Account checkbox */}
+                  <div className="col-span-1 md:col-span-2 flex items-center gap-2 mt-2">
+                    <input
+                      type="checkbox"
+                      id="create-account"
+                      checked={createAccount}
+                      onChange={e => setCreateAccount(e.target.checked)}
+                      className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="create-account" className="text-sm text-gray-700 select-none">
+                      {isArabic ? "إنشاء حساب جديد (اختياري)" : "Create an account (optional)"}
+                    </label>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm lg:sticky lg:top-4"
+              >
+                <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+                  {isArabic ? "ملخص الطلب" : "Order Summary"}
+                </h2>
+                
+                {/* Coupon Code Input */}
+                <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 mb-2 block">
+                    {isArabic ? "كود الخصم" : "Coupon Code"}
+                  </label>
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-lg">
+                      <div>
+                        <span className="text-sm font-medium text-green-700">{appliedCoupon.code}</span>
+                        <span className="text-xs text-green-600 ml-2">
+                          ({appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : `${currency} ${appliedCoupon.discount_value}`})
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="text-red-500 hover:text-red-700 text-xs font-medium"
+                      >
+                        {isArabic ? "إزالة" : "Remove"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        placeholder={isArabic ? "أدخل كود الخصم" : "Enter coupon code"}
+                        className="flex-1 text-sm uppercase"
+                      />
+                      <Button
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading}
+                        variant="outline"
+                        size="sm"
+                        className="px-4"
+                      >
+                        {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isArabic ? "تطبيق" : "Apply")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2 sm:space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 text-xs sm:text-sm">
+                      {isArabic ? "المجموع الفرعي" : "Subtotal"}
+                    </span>
+                    <span className="font-medium text-xs sm:text-sm">{currency} {subtotal.toFixed(2)}</span>
+                  </div>
+                  {appliedCoupon && couponDiscount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="text-xs sm:text-sm">
+                        {isArabic ? "خصم الكوبون" : "Coupon Discount"}
+                      </span>
+                      <span className="font-medium text-xs sm:text-sm">-{currency} {couponDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 text-xs sm:text-sm">
+                      {isArabic ? "الشحن" : "Shipping"}
+                    </span>
+                    <span className={`font-medium text-xs sm:text-sm ${shipping === 0 ? 'text-green-600' : ''}`}>
+                      {shipping === 0 ? (isArabic ? "مجاني" : "FREE") : `${currency} ${shipping.toFixed(2)}`}
+                    </span>
+                  </div>
+                  {shipping > 0 && shippingSettings.freeShippingEnabled && amountForFreeShipping > 0 && (
+                    <p className="text-[10px] sm:text-xs text-amber-600 bg-amber-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg">
+                      {isArabic 
+                        ? `أضف ${currency} ${amountForFreeShipping.toFixed(2)} للحصول على شحن مجاني`
+                        : `Add ${currency} ${amountForFreeShipping.toFixed(2)} more for free shipping`
+                      }
+                    </p>
+                  )}
+                  <hr />
+                  <div className="flex justify-between text-base sm:text-lg font-bold">
+                    <span>{isArabic ? "الإجمالي" : "Total"}</span>
+                    <span className="text-[#2d5a3d]">{currency} {total.toFixed(2)}</span>
+                  </div>
+                </div>
+
+
+                {/* Payment Method Selection */}
+                <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+                  <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+                    {isArabic ? "طريقة الدفع" : "Payment Method"}
+                  </h3>
+                  {/* Dynamically render enabled payment gateways */}
+                  {paymentGateways && paymentGateways.filter(gw => gw.enabled && (gw.type === 'card' || gw.type === 'paypal' || gw.type === 'payoneer' || gw.type === 'bank')).map(gw => (
+                    <label
+                      key={gw.type}
+                      className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                        paymentMethod === "online"
+                          ? "border-[#2d5a3d] bg-[#2d5a3d]/5"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={paymentMethod === "online"}
+                        onChange={() => setPaymentMethod("online")}
+                        className="w-4 h-4 text-[#2d5a3d] flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+                          <span className="font-medium text-sm sm:text-base">
+                            {gw.displayName || (isArabic ? "الدفع الإلكتروني" : "Pay Online")}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate">
+                          {isArabic ? "بطاقة ائتمان / Apple Pay" : "Credit Card / Apple Pay"}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+
+                  {/* WhatsApp Order Option (always available) */}
+                  <label
+                    className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                      paymentMethod === "whatsapp"
+                        ? "border-[#25D366] bg-[#25D366]/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      checked={paymentMethod === "whatsapp"}
+                      onChange={() => setPaymentMethod("whatsapp")}
+                      className="w-4 h-4 text-[#25D366] flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#25D366" className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                        </svg>
+                        <span className="font-medium text-sm sm:text-base">
+                          {isArabic ? "طلب عبر واتساب" : "Order via WhatsApp"}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate">
+                        {isArabic ? "تواصل معنا مباشرة للطلب" : "Contact us directly"}
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Home Delivery Option (COD) - only if enabled in paymentGateways */}
+                  {paymentGateways && paymentGateways.some(gw => gw.enabled && gw.type === 'cod') && (
+                    <label
+                      className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                        paymentMethod === "home_delivery"
+                          ? "border-amber-500 bg-amber-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={paymentMethod === "home_delivery"}
+                        onChange={() => setPaymentMethod("home_delivery")}
+                        className="w-4 h-4 text-amber-500 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0" />
+                          <span className="font-medium text-sm sm:text-base">
+                            {isArabic ? "الدفع عند الاستلام" : "Cash on Delivery"}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 truncate">
+                          {isArabic ? "ادفع نقداً عند استلام الطلب" : "Pay when you receive"}
+                        </p>
+                      </div>
+                    </label>
+                  )}
+
+                  {/* Privacy Policy Checkbox */}
+                  <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="accept-terms"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="accept-terms" className="text-xs sm:text-sm text-gray-600">
+                      {isArabic ? (
+                        <>
+                          أوافق على{" "}
+                          <Link to="/privacy-policy" className="text-primary hover:underline">
+                            سياسة الخصوصية
+                          </Link>
+                          {" "}و{" "}
+                          <Link to="/terms-of-service" className="text-primary hover:underline">
+                            الشروط والأحكام
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          I agree to the{" "}
+                          <Link to="/privacy-policy" className="text-primary hover:underline">
+                            Privacy Policy
+                          </Link>
+                          {" "}and{" "}
+                          <Link to="/terms-of-service" className="text-primary hover:underline">
+                            Terms of Service
+                          </Link>
+                        </>
+                      )}
+                    </label>
+                  </div>
+
+                  {/* Place Order Button */}
+                  <Button
+                    onClick={
+                      paymentMethod === "online" ? handleShopifyCheckout : 
+                      paymentMethod === "home_delivery" ? handleHomeDeliveryOrder :
+                      handleWhatsAppOrder
+                    }
+                    disabled={isLoading || !acceptedTerms}
+                    className={`w-full h-11 sm:h-14 text-sm sm:text-lg font-semibold ${
+                      paymentMethod === "whatsapp" 
+                        ? "bg-[#25D366] hover:bg-[#128C7E] text-white"
+                        : paymentMethod === "home_delivery"
+                        ? "bg-amber-500 hover:bg-amber-600 text-white"
+                        : "bg-[#2d5a3d] hover:bg-[#234830] text-white"
+                    } disabled:opacity-50`}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
+                    ) : paymentMethod === "online" ? (
+                      <>
+                        <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                        {isArabic ? "الدفع الآن" : "Pay Now"}
+                      </>
+                    ) : paymentMethod === "home_delivery" ? (
+                      <>
+                        <Truck className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                        {isArabic ? "تأكيد الطلب" : "Confirm Order"}
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 sm:w-5 sm:h-5 mr-2">
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                        </svg>
+                        {isArabic ? "طلب عبر واتساب" : "Order via WhatsApp"}
+                      </>
+                    )}
+                  </Button>
+
+                  {!acceptedTerms && (
+                    <p className="text-xs text-amber-600 text-center">
+                      {isArabic ? "يجب الموافقة على الشروط والأحكام للمتابعة" : "Please accept the terms and conditions to proceed"}
+                    </p>
+                  )}
+                </div>
+
+                {/* Trust Badges removed: now only dynamic Footer Features bar is shown below */}
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Dynamic Footer Features Bar (same as Footer) */}
+      <div className="border-b border-white/10 bg-white">
+        <div className="container mx-auto px-4 py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {Array.isArray(useSiteSettings().footerFeatures) && useSiteSettings().footerFeatures.length > 0 ? (
+              useSiteSettings().footerFeatures.filter(f => f.enabled).map((feature) => {
+                // Use same icon logic as Footer
+                const getFeatureIcon = (iconName: string) => {
+                  switch (iconName) {
+                    case 'truck': return Truck;
+                    case 'rotate': return RefreshCw;
+                    case 'credit-card': return CreditCard;
+                    case 'map-pin': return MapPin;
+                    case 'percent': return Percent;
+                    default: return Truck;
+                  }
+                };
+                const getFeatureIconColor = (iconName: string) => {
+                  switch (iconName) {
+                    case 'truck': return 'text-amber-500';
+                    case 'rotate': return 'text-blue-400';
+                    case 'credit-card': return 'text-yellow-400';
+                    case 'map-pin': return 'text-pink-400';
+                    case 'percent': return 'text-green-400';
+                    default: return 'text-amber-500';
+                  }
+                };
+                const IconComponent = getFeatureIcon(feature.icon);
+                const iconColor = getFeatureIconColor(feature.icon);
+                return (
+                  <div key={feature.id} className="flex items-start gap-3">
+                    <IconComponent className={`w-5 h-5 ${iconColor} flex-shrink-0 mt-0.5`} />
+                    <div>
+                      <h4 className="font-semibold text-sm">
+                        {isArabic ? feature.titleAr : feature.title}
+                      </h4>
+                      <p className="text-gray-400 text-xs mt-0.5">
+                        {isArabic ? feature.descriptionAr : feature.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              // Fallback static features
+              <>
+                <div className="flex items-start gap-3">
+                  <Truck className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-sm">{isArabic ? "توصيل مجاني" : "Free Delivery"}</h4>
+                    <p className="text-gray-400 text-xs mt-0.5">{isArabic ? "توصيل مجاني للطلبات فوق 300 درهم" : "Free Delivery On Orders Over 300 AED"}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <RefreshCw className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-sm">{isArabic ? "إرجاع سهل" : "Hassle-Free Returns"}</h4>
+                    <p className="text-gray-400 text-xs mt-0.5">{isArabic ? "خلال 7 أيام من التسليم" : "Within 7 days of delivery."}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CreditCard className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-sm">{isArabic ? "أقساط سهلة" : "Easy Installments"}</h4>
+                    <p className="text-gray-400 text-xs mt-0.5">{isArabic ? "ادفع لاحقاً مع تابي" : "Pay Later with tabby."}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-pink-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-sm">{isArabic ? "زورنا في المتجر" : "Visit Us In-Store"}</h4>
+                    <p className="text-gray-400 text-xs mt-0.5">{isArabic ? "في أبوظبي ودبي" : "In Abu Dhabi and Dubai."}</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Checkout;
