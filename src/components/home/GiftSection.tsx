@@ -26,6 +26,7 @@ export const GiftSection = () => {
   useEffect(() => {
     const fetchGiftProducts = async () => {
       try {
+        const productsLimit = giftSection.productsLimit || 6;
         // Fetch products that have 'gift' tag, 'gift'/'gifts' in category/subcategory
         const { data, error } = await supabase
           .from('products')
@@ -45,7 +46,7 @@ export const GiftSection = () => {
             tag.toLowerCase().includes('gift') || tag.toLowerCase() === 'gifts'
           );
           return categoryMatch || subcategoryMatch || tagsMatch;
-        }).slice(0, 6);
+        }).slice(0, productsLimit);
         
         setGiftProducts(giftProducts);
       } catch (error) {
@@ -135,7 +136,7 @@ export const GiftSection = () => {
             {/* Mobile Horizontal Scroll */}
             <div className="md:hidden -mx-4 px-4">
               <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
-                {displayItems.slice(0, 6).map((item, index) => (
+                {displayItems.slice(0, giftSection.productsLimit || 6).map((item, index) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, x: 20 }}
@@ -163,8 +164,8 @@ export const GiftSection = () => {
             </div>
 
             {/* Desktop Grid */}
-            <div className="hidden md:grid grid-cols-3 gap-6">
-              {displayItems.slice(0, 3).map((item, index) => (
+            <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-6">
+              {displayItems.slice(0, giftSection.productsLimit || 6).map((item, index) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}

@@ -7,6 +7,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useCartStore } from "@/stores/cartStore";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -56,10 +57,20 @@ interface CategoryWithProducts {
 export const FeaturedCategorySection = () => {
   const [categories, setCategories] = useState<CategoryWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
+  const { featuredCategorySection } = useSiteSettings();
+
+  // If section is disabled, return null
+  if (!featuredCategorySection.enabled) {
+    return null;
+  }
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        const categoriesLimit = featuredCategorySection.categoriesLimit || 4;
+        const productsPerCategory = featuredCategorySection.productsPerCategory || 6;
+        const selectedCategories = featuredCategorySection.selectedCategories || [];
+
         // Fetch all categories to build parent-child mapping
         const { data: allCategoriesData, error: allCatError } = await supabase
           .from('categories')
@@ -69,11 +80,19 @@ export const FeaturedCategorySection = () => {
         
         if (allCatError) throw allCatError;
 
-        // Get only main categories (display_order <= 10 typically means parent)
-        // OR categories that are specifically parent level (no parent_id)
-        const mainCategories = (allCategoriesData || []).filter(cat => 
+        // Get only main categories
+        let mainCategories = (allCategoriesData || []).filter(cat => 
           cat.parent_id === null && cat.display_order <= 10
-        ).slice(0, 4);
+        );
+        
+        // If specific categories are selected in admin, filter to only those
+        if (selectedCategories.length > 0) {
+          mainCategories = mainCategories.filter(cat => 
+            selectedCategories.includes(cat.id)
+          );
+        }
+        
+        mainCategories = mainCategories.slice(0, categoriesLimit);
 
         // Build a map of parent categories to their child slugs
         const parentToChildSlugs: Record<string, string[]> = {};
@@ -131,7 +150,7 @@ export const FeaturedCategorySection = () => {
               href: `/shop?category=${cat.slug}`,
               image: cat.image || fallbackBanners[categorySlug] || ficusPlant,
             },
-            products: matchedProducts.slice(0, 8),
+            products: matchedProducts.slice(0, productsPerCategory),
           };
         }).filter(cat => cat.products.length > 0);
 
