@@ -44,6 +44,7 @@ export interface GiftSectionSettings {
   buttonText: string;
   buttonTextAr: string;
   buttonLink: string;
+  productsLimit: number;
   items: {
     id: string;
     name: string;
@@ -348,6 +349,7 @@ const defaultGiftSection: GiftSectionSettings = {
   buttonText: "View All Gifts",
   buttonTextAr: "عرض جميع الهدايا",
   buttonLink: "/shop?category=gifts",
+  productsLimit: 6,
   items: []
 };
 

@@ -13,6 +13,7 @@ import {
   ChevronDown, ChevronUp, Leaf, Flower2, Package, Shrub, 
   Sparkles, Gift, Tag, Image, Upload, TreeDeciduous, Boxes, Fence
 } from "lucide-react";
+import { MediaPicker } from "./MediaPicker";
 
 interface SubCategory {
   id: string;
@@ -20,6 +21,7 @@ interface SubCategory {
   nameAr: string;
   href: string;
   icon: string;
+  customIcon?: string;
   order: number;
 }
 
@@ -29,6 +31,7 @@ interface MegaMenuCategory {
   nameAr: string;
   href: string;
   icon: string;
+  customIcon?: string;
   image: string;
   isSale: boolean;
   isActive: boolean;
@@ -52,6 +55,7 @@ const iconOptions = [
   { value: 'sparkles', label: 'Sparkles', Icon: Sparkles },
   { value: 'gift', label: 'Gift', Icon: Gift },
   { value: 'tag', label: 'Tag/Sale', Icon: Tag },
+  { value: 'custom', label: 'Custom Icon URL', Icon: Image },
 ];
 
 export const MegaMenuManager = () => {
@@ -495,57 +499,23 @@ export const MegaMenuManager = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      {category.icon === 'custom' && (
+                        <div className="mt-2">
+                          <Input
+                            value={category.customIcon || ''}
+                            onChange={(e) => updateCategory(category.id, 'customIcon', e.target.value)}
+                            placeholder="Enter custom icon URL (svg/png)"
+                            className="text-sm"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Category Image</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={category.image}
-                          onChange={(e) => updateCategory(category.id, 'image', e.target.value)}
-                          placeholder="Enter URL or select from media"
-                          className="flex-1"
-                        />
-                        <Dialog open={imageSelectOpen === category.id} onOpenChange={(open) => setImageSelectOpen(open ? category.id : null)}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="icon">
-                              <Image className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
-                            <DialogHeader>
-                              <DialogTitle>Select Image from Media Library</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                              {mediaFiles.map((file) => (
-                                <div
-                                  key={file.id}
-                                  className="relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 hover:border-primary transition-colors"
-                                  onClick={() => {
-                                    updateCategory(category.id, 'image', file.file_path);
-                                    setImageSelectOpen(null);
-                                  }}
-                                >
-                                  <img
-                                    src={file.file_path}
-                                    alt={file.file_name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              ))}
-                              {mediaFiles.length === 0 && (
-                                <div className="col-span-full text-center py-8 text-muted-foreground">
-                                  No images in media library. Upload images in Media Library first.
-                                </div>
-                              )}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                      {category.image && (
-                        <div className="mt-2 relative w-24 h-16 rounded overflow-hidden bg-slate-100">
-                          <img src={category.image} alt="Preview" className="w-full h-full object-cover" />
-                        </div>
-                      )}
+                      <MediaPicker
+                        value={category.image}
+                        onChange={(url) => updateCategory(category.id, 'image', url)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>Is Sale Category</Label>

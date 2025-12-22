@@ -37,6 +37,7 @@ interface GiftSectionSettings {
   buttonText: string;
   buttonTextAr: string;
   buttonLink: string;
+  productsLimit: number;
 }
 
 interface PromoSectionSettings {
@@ -115,7 +116,8 @@ export const HomepageSectionsManager = () => {
     subtitleAr: "مجموعات هدايا منسقة بعناية لمحبي النباتات",
     buttonText: "View All Gifts",
     buttonTextAr: "عرض جميع الهدايا",
-    buttonLink: "/shop?category=gifts"
+    buttonLink: "/shop?category=gifts",
+    productsLimit: 6
   });
 
   const [promoSettings, setPromoSettings] = useState<PromoSectionSettings>({
@@ -712,7 +714,7 @@ export const HomepageSectionsManager = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label>Button Text (EN)</Label>
                   <Input
@@ -733,6 +735,16 @@ export const HomepageSectionsManager = () => {
                   <Input
                     value={giftSettings.buttonLink}
                     onChange={(e) => setGiftSettings(prev => ({ ...prev, buttonLink: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Products to Display</Label>
+                  <Input
+                    type="number"
+                    min={3}
+                    max={12}
+                    value={giftSettings.productsLimit || 6}
+                    onChange={(e) => setGiftSettings(prev => ({ ...prev, productsLimit: parseInt(e.target.value) || 6 }))}
                   />
                 </div>
               </div>

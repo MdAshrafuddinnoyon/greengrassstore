@@ -34,18 +34,41 @@ const Auth = () => {
   const { checkPassword, isLeaked, count, isChecking: isCheckingPassword } = useLeakedPasswordCheck();
   const { t } = useLanguage();
 
+  // Check user role and redirect accordingly
+  const checkUserRoleAndRedirect = async (userId: string) => {
+    try {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (roleData?.role === 'admin' || roleData?.role === 'store_manager') {
+        navigate("/admin");
+      } else {
+        navigate("/account");
+      }
+    } catch (error) {
+      console.error('Error checking role:', error);
+      navigate("/account");
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session?.user) {
-          navigate("/account");
+          // Defer role check to avoid deadlock
+          setTimeout(() => {
+            checkUserRoleAndRedirect(session.user.id);
+          }, 0);
         }
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        navigate("/account");
+        checkUserRoleAndRedirect(session.user.id);
       }
     });
 
