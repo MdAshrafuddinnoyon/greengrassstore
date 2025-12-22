@@ -643,12 +643,12 @@ export const ProductManager = () => {
                   {bulkCategory && getSubcategories(bulkCategory).length > 0 && (
                     <div className="flex flex-col gap-1.5">
                       <Label className="text-xs font-medium">Subcategory (Optional)</Label>
-                      <Select value={bulkSubcategory} onValueChange={setBulkSubcategory}>
+                      <Select value={bulkSubcategory || "_none_"} onValueChange={(v) => setBulkSubcategory(v === "_none_" ? "" : v)}>
                         <SelectTrigger className="w-[180px]">
                           <SelectValue placeholder="Select subcategory" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="_none_">None</SelectItem>
                           {getSubcategories(bulkCategory).map(subcat => (
                             <SelectItem key={subcat.id} value={subcat.slug}>{subcat.name}</SelectItem>
                           ))}
