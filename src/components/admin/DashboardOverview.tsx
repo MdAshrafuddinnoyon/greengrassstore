@@ -1,11 +1,32 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Users, TrendingUp, ShoppingBag, Package, Receipt, BarChart3, MessageSquare, DollarSign, Activity, ArrowUpRight, ArrowDownRight, RefreshCw } from "lucide-react";
+import { FileText, Users, TrendingUp, ShoppingBag, Package, Receipt, BarChart3, MessageSquare, DollarSign, Activity, ArrowUpRight, ArrowDownRight, RefreshCw, Eye, Clock, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
+import { format, subDays, startOfDay, endOfDay, formatDistanceToNow } from "date-fns";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface RecentOrder {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  total: number;
+  status: string;
+  created_at: string;
+}
+
+interface CustomRequest {
+  id: string;
+  name: string;
+  email: string;
+  title: string;
+  requirement_type: string;
+  status: string;
+  created_at: string;
+}
 
 interface Stats {
   totalPosts: number;
@@ -63,6 +84,8 @@ export const DashboardOverview = ({ onNavigate }: DashboardOverviewProps) => {
   const [dailyRevenue, setDailyRevenue] = useState<DailyRevenue[]>([]);
   const [orderStatus, setOrderStatus] = useState<OrderStatusData[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [recentRequests, setRecentRequests] = useState<CustomRequest[]>([]);
 
   const fetchStats = async () => {
     try {
@@ -181,6 +204,23 @@ export const DashboardOverview = ({ onNavigate }: DashboardOverviewProps) => {
         status: status.charAt(0).toUpperCase() + status.slice(1),
         count
       }));
+
+      // Fetch recent orders (last 5)
+      const { data: recentOrdersData } = await supabase
+        .from("orders")
+        .select("id, order_number, customer_name, customer_email, total, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      // Fetch recent custom requests (last 5)
+      const { data: recentRequestsData } = await supabase
+        .from("custom_requirements")
+        .select("id, name, email, title, requirement_type, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      setRecentOrders(recentOrdersData || []);
+      setRecentRequests(recentRequestsData || []);
 
       setStats({
         totalPosts: totalPosts || 0,
@@ -472,6 +512,107 @@ export const DashboardOverview = ({ onNavigate }: DashboardOverviewProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Recent Orders and Custom Requests */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {/* Recent Orders */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="p-4 md:p-6 flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Receipt className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+              Recent Orders
+              <Badge variant="outline" className="ml-2 text-xs">Live</Badge>
+            </CardTitle>
+            {onNavigate && (
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('orders')} className="gap-1">
+                View All <ExternalLink className="w-3 h-3" />
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="p-4 md:p-6 pt-0">
+            <ScrollArea className="h-[280px]">
+              {recentOrders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-8">
+                  <Receipt className="w-8 h-8 mb-2 opacity-50" />
+                  <p>No orders yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentOrders.map((order) => (
+                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-medium">{order.order_number}</span>
+                          <Badge className={`text-xs ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">{order.customer_name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-emerald-600">AED {Number(order.total).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Recent Custom Requests */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="p-4 md:p-6 flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-pink-500" />
+              Custom Requests
+              <Badge variant="outline" className="ml-2 text-xs">Live</Badge>
+            </CardTitle>
+            {onNavigate && (
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('custom-requests')} className="gap-1">
+                View All <ExternalLink className="w-3 h-3" />
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="p-4 md:p-6 pt-0">
+            <ScrollArea className="h-[280px]">
+              {recentRequests.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-8">
+                  <MessageSquare className="w-8 h-8 mb-2 opacity-50" />
+                  <p>No requests yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentRequests.map((request) => (
+                    <div key={request.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm truncate">{request.title}</span>
+                          <Badge className={`text-xs ${getStatusColor(request.status)}`}>
+                            {request.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">{request.name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {request.requirement_type}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
 
     </div>
   );

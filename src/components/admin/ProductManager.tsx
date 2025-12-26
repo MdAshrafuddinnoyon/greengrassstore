@@ -211,7 +211,12 @@ export const ProductManager = () => {
   const [bulkSubcategory, setBulkSubcategory] = useState<string>("");
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from('categories').select('*').eq('is_active', true).order('display_order');
+    const { data } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+    console.log('Fetched categories:', data?.length || 0);
     setCategories(data || []);
   };
 
@@ -253,7 +258,7 @@ export const ProductManager = () => {
     fetchProducts(); 
     fetchCategories();
 
-    // Real-time subscription for products
+    // Real-time subscription for products and categories
     const channel = supabase
       .channel('admin-products-realtime')
       .on(
@@ -268,6 +273,13 @@ export const ProductManager = () => {
         { event: '*', schema: 'public', table: 'product_variants' },
         () => {
           fetchProducts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'categories' },
+        () => {
+          fetchCategories();
         }
       )
       .subscribe();
@@ -765,10 +777,23 @@ export const ProductManager = () => {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_all_">All Categories</SelectItem>
+                    <SelectItem value="_all_">All Categories ({categories.length})</SelectItem>
                     {categories.filter(c => !c.parent_id).map(cat => (
                       <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
                     ))}
+                    {/* Also show all categories including subcategories */}
+                    {categories.filter(c => c.parent_id).length > 0 && (
+                      <>
+                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground border-t mt-1 pt-1">
+                          Subcategories
+                        </div>
+                        {categories.filter(c => c.parent_id).map(cat => (
+                          <SelectItem key={cat.id} value={cat.slug}>
+                            ↳ {cat.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
